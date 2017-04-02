@@ -1,0 +1,6 @@
+[package]
+name = "tcalc"
+version = "0.1.0"
+authors = ["dubrowgn"]
+
+[dependencies]
