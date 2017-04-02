@@ -1,0 +1,2 @@
+# tcalc
+A terminal calculator
