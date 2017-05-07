@@ -7,6 +7,7 @@ pub enum TokenType {
 	Plus,
 	Minus,
 	Star,
+	Caret,
 	StarStar,
 	ForwardSlash,
 	Number { str: String },
@@ -15,10 +16,10 @@ pub enum TokenType {
 }
 
 pub struct Token {
-	token_type: TokenType,
-	line: u32,
-	column: u32,
-	length: u32
+	pub token_type: TokenType,
+	pub line: u32,
+	pub column: u32,
+	pub length: u32
 }
 
 pub struct Scanner<'a> {
@@ -71,27 +72,38 @@ impl<'a> Scanner<'a> {
 			length: length
 		};
 
-		println!("{:?} @{}:{}, len {}",
+		trace!("{:?} @{}:{}, len {}",
 			t.token_type, t.line, t.column, t.length);
 
 		Some(t)
 	}
 
 	fn next(&mut self) -> Option<Token> {
-		let co = self.peek_char();
-		if co == Option::None {
-			return Option::None
+		let mut c;
+
+		// find the next non-whitespace character
+		loop {
+			c = unwrap!(self.peek_char(), {
+				return None;
+			});
+
+			if !c.is_whitespace() {
+				break;
+			}
+			
+			self.skip_char();
 		}
 
-		match co.unwrap() {
+		match c {
 			'(' => self.scan_left_paren(),
 			')' => self.scan_right_paren(),
 			'+' => self.scan_plus(),
 			'-' => self.scan_minus(),
 			'*' => self.scan_star(),
+			'^' => self.scan_caret(),
 			'/' => self.scan_forward_slash(),
 			'\n' => self.scan_new_line(),
-			c => {
+			_ => {
 				if c.is_numeric() {
 					self.scan_number()
 				} else if c.is_alphabetic() {
@@ -134,6 +146,11 @@ impl<'a> Scanner<'a> {
 			}
 			_ => self.new_token(TokenType::Star, 1)
 		}
+	}
+
+	fn scan_caret(&mut self) -> Option<Token> {
+		self.skip_char();
+		self.new_token(TokenType::Caret, 1)
 	}
 
 	fn scan_forward_slash(&mut self) -> Option<Token> {
