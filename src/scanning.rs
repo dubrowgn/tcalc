@@ -103,6 +103,7 @@ impl<'a> Scanner<'a> {
 			'^' => self.scan_caret(),
 			'/' => self.scan_forward_slash(),
 			'\n' => self.scan_new_line(),
+			'.' => self.scan_number(),
 			_ => {
 				if c.is_numeric() {
 					self.scan_number()
@@ -169,9 +170,7 @@ impl<'a> Scanner<'a> {
 	fn scan_number(&mut self) -> Option<Token> {
 		let start = self.column;
 		let mut is_float = false;
-
 		let mut str = String::new();
-		str.push(self.get_char().unwrap());
 
 		while let Some(c) = self.peek_char() {
 			match c {
