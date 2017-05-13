@@ -25,6 +25,16 @@ impl<'a> Parser<'a> {
 		self.scanner.push(t)
 	}
 
+	fn expect_token(&mut self) -> Option<Token> {
+		return match self.get_token() {
+			Some(t) => Some(t),
+			None => {
+				println!("Unexpected end of input");
+				None
+			}
+		}
+	}
+
 	fn parse_ast(&mut self) -> Option<Ast> {
 		trace!("parse_ast");
 
@@ -71,7 +81,6 @@ impl<'a> Parser<'a> {
 		trace!("parse_term");
 
 		let mut expr = unwrap!(self.parse_factor(), {
-			println!("Unexpected end of input @ {}:{}", file!(), line!());
 			return None;
 		});
 
@@ -86,17 +95,16 @@ impl<'a> Parser<'a> {
 				}
 			}
 
-			if let Some(right) = self.parse_factor() {
-				expr = Expression::Binary(Binary {
-					left: Box::new(expr),
-					op: op,
-					right: Box::new(right)
-				})
-			} else {
-				println!("Unexpected end of input @ {}:{}", file!(), line!());
+			let right = unwrap!(self.parse_factor(), {
 				break;
-			}
-		}
+			});
+
+			expr = Expression::Binary(Binary {
+				left: Box::new(expr),
+				op: op,
+				right: Box::new(right)
+			});
+		} // while
 
 		return Some(expr);
 	}
@@ -105,7 +113,6 @@ impl<'a> Parser<'a> {
 		trace!("parse_factor");
 
 		let mut expr = unwrap!(self.parse_exponent(), {
-			println!("Unexpected end of input @ {}:{}", file!(), line!());
 			return None;
 		});
 
@@ -120,17 +127,16 @@ impl<'a> Parser<'a> {
 				}
 			}
 
-			if let Some(right) = self.parse_exponent() {
-				expr = Expression::Binary(Binary {
-					left: Box::new(expr),
-					op: op,
-					right: Box::new(right)
-				});
-			} else {
-				println!("Unexpected end of input @ {}:{}", file!(), line!());
+			let right = unwrap!(self.parse_exponent(), {
 				break;
-			}
-		}
+			});
+
+			expr = Expression::Binary(Binary {
+				left: Box::new(expr),
+				op: op,
+				right: Box::new(right)
+			});
+		} // while
 
 		return Some(expr);
 	} // parse_factor
@@ -139,7 +145,6 @@ impl<'a> Parser<'a> {
 		trace!("parse_exponent");
 
 		let mut expr = unwrap!(self.parse_unary(), {
-			println!("Unexpected end of input @ {}:{}", file!(), line!());
 			return None;
 		});
 
@@ -154,17 +159,16 @@ impl<'a> Parser<'a> {
 				}
 			}
 
-			if let Some(right) = self.parse_unary() {
-				expr = Expression::Binary(Binary {
-					left: Box::new(expr),
-					op: op,
-					right: Box::new(right)
-				});
-			} else {
-				println!("Unexpected end of input @ {}:{}", file!(), line!());
+			let right = unwrap!(self.parse_unary(), {
 				break;
-			}
-		}
+			});
+
+			expr = Expression::Binary(Binary {
+				left: Box::new(expr),
+				op: op,
+				right: Box::new(right)
+			});
+		} // while
 
 		return Some(expr);
 	} // parse_exponent
@@ -172,8 +176,7 @@ impl<'a> Parser<'a> {
 	fn parse_unary(&mut self) -> Option<Expression> {
 		trace!("parse_unary");
 
-		let t = unwrap!(self.get_token(), {
-			println!("Unexpected end of input @ {}:{}", file!(), line!());
+		let t = unwrap!(self.expect_token(), {
 			return None;
 		});
 
@@ -191,18 +194,14 @@ impl<'a> Parser<'a> {
 				op: op,
 				right: Box::new(right)
 			})),
-			None => {
-				println!("Unexpected end of input @ {}:{}", file!(), line!());
-				None
-			}
+			None => None,
 		};
 	} // parse_unary
 
 	fn parse_primary(&mut self) -> Option<Expression> {
 		trace!("parse_primary");
 
-		let t = unwrap!(self.get_token(), {
-			println!("Unexpected end of input @ {}:{}", file!(), line!());
+		let t = unwrap!(self.expect_token(), {
 			return None;
 		});
 
@@ -218,17 +217,14 @@ impl<'a> Parser<'a> {
 			},
 			TokenType::LeftParen => {
 				let expr = self.parse_expression();
-				match self.get_token() {
-					Some(Token { token_type: TokenType::RightParen, .. }) => return expr,
+				match self.expect_token() {
+					Some(Token { token_type: TokenType::RightParen, .. }) => expr,
 					Some(t) => {
 						println!("Expected token RightParen, but found '{:?}' (line {}, col {})",
 							t.token_type, t.line, t.column);
-						return None;
+						None
 					},
-					None => {
-						println!("Unexpected end of input @ {}:{}", file!(), line!());
-						return None;
-					},
+					None => None,
 				}
 			},
 			_ => {
