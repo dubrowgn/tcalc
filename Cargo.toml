@@ -8,8 +8,10 @@ repository = "https://github.com/dubrowgn/tcalc.git"
 documentation = "https://github.com/dubrowgn/tcalc"
 
 include = [
-	"src/*.rs",
 	"Cargo.toml",
+	"LICENSE",
+	"README.md",
+	"src/*.rs",
 ]
 
 [dependencies]
