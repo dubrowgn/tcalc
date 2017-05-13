@@ -1,7 +1,10 @@
 [package]
 name = "tcalc"
+description = "A terminal calculator"
 version = "1.0.1"
 authors = ["dubrowgn"]
+license = "MIT"
+
 include = [
 	"src/*.rs",
 	"Cargo.toml",
