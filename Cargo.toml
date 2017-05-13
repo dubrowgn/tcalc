@@ -2,6 +2,10 @@
 name = "tcalc"
 version = "1.0.1"
 authors = ["dubrowgn"]
+include = [
+	"src/*.rs",
+	"Cargo.toml",
+]
 
 [dependencies]
 getopts = "0.2.14"
