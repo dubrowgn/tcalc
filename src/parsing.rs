@@ -121,6 +121,7 @@ impl<'a> Parser<'a> {
 			match t.token_type {
 				TokenType::Star => op = BinaryOp::Multiply,
 				TokenType::ForwardSlash => op = BinaryOp::Divide,
+				TokenType::Percent => op = BinaryOp::Modulo,
 				_ => {
 					self.put_token(t);
 					break;

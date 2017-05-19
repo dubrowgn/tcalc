@@ -20,13 +20,13 @@ $ tcalc
 
 ## Precedence
 
-| Operator | Description              |
-|----------|--------------------------|
-| ( )      | parens                   |
-| -        | negate                   |
-| ^ \*\*   | exponentiation           |
-| * /      | multiplication, division |
-| + -      | addition, subtraction    |
+| Operator | Description                      |
+|----------|----------------------------------|
+| ( )      | parens                           |
+| -        | negate                           |
+| ^ \*\*   | exponentiation                   |
+| * / %    | multiplication, division, modulo |
+| + -      | addition, subtraction            |
 
 ## REPL
 

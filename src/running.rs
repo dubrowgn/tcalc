@@ -25,6 +25,12 @@ impl Binary {
 					_ => Ok(l / r)
 				}
 			},
+			BinaryOp::Modulo => {
+				match r {
+					0f64 => Err("Cannot divide by zero"),
+					_ => Ok(l % r)
+				}
+			},
 			BinaryOp::Exponent => Ok(l.powf(r)),
 		}
 	} // run

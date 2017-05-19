@@ -30,6 +30,7 @@ pub enum BinaryOp {
 	Minus,
 	Multiply,
 	Divide,
+	Modulo,
 	Exponent,
 }
 

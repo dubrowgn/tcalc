@@ -8,6 +8,7 @@ pub enum TokenType {
 	Minus,
 	Star,
 	Caret,
+	Percent,
 	StarStar,
 	ForwardSlash,
 	Number { str: String },
@@ -101,6 +102,7 @@ impl<'a> Scanner<'a> {
 			'-' => self.scan_minus(),
 			'*' => self.scan_star(),
 			'^' => self.scan_caret(),
+			'%' => self.scan_percent(),
 			'/' => self.scan_forward_slash(),
 			'\n' => self.scan_new_line(),
 			'.' => self.scan_number(),
@@ -152,6 +154,11 @@ impl<'a> Scanner<'a> {
 	fn scan_caret(&mut self) -> Option<Token> {
 		self.skip_char();
 		self.new_token(TokenType::Caret, 1)
+	}
+
+	fn scan_percent(&mut self) -> Option<Token> {
+		self.skip_char();
+		self.new_token(TokenType::Percent, 1)
 	}
 
 	fn scan_forward_slash(&mut self) -> Option<Token> {
