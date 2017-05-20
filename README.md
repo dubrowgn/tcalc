@@ -34,3 +34,11 @@ $ tcalc
 |----------|--------------------------|
 | exit     | exit the REPL            |
 | quit     | alias for exit           |
+
+## Built-in Variables
+
+| Variable | Description                   |
+|----------|-------------------------------|
+| e        | Euler's number (e)            |
+| pi       | Archimedes' constant (π)      |
+| ans      | Result of previous expression |
