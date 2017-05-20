@@ -7,7 +7,6 @@ struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-
 	fn new(input: &String) -> Parser {
 		let scanner = Scanner::new(input);
 		let buf = BufferedIterator::new(scanner);
@@ -59,10 +58,7 @@ impl<'a> Parser<'a> {
 		if let Token { token_type: TokenType::Identifier { ref str, .. }, .. } = t {
 			match str.as_str() {
 				"exit" | "quit" => return Some(Command::Exit),
-				_ => {
-					println!("Unexpected identifier '{}'", str);
-					return None
-				}
+				_ => {},
 			}
 		}
 
@@ -215,6 +211,9 @@ impl<'a> Parser<'a> {
 						None
 					}
 				}
+			},
+			TokenType::Identifier { str } => {
+				Some(Expression::Variable(Variable { name: str }))
 			},
 			TokenType::LeftParen => {
 				let expr = self.parse_expression();

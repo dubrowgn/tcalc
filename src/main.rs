@@ -15,6 +15,7 @@ mod parsing;
 mod running;
 
 use ast::*;
+use running::*;
 
 fn build_options() -> Options {
 	let mut opts = Options::new();
@@ -49,10 +50,12 @@ fn print_version() {
 }
 
 fn run_exprs<'a, I>(inputs: I) where I: Iterator<Item=&'a String> {
+	let mut runner = Runner::new();
+
 	for str in inputs {
 		match parsing::parse(&str) {
 			Some(Ast::Expression(expr)) => {
-				match expr.run() {
+				match runner.run(expr) {
 					Ok(v) => println!("{}", v),
 					Err(msg) => println!("{}", msg),
 				}
@@ -63,6 +66,8 @@ fn run_exprs<'a, I>(inputs: I) where I: Iterator<Item=&'a String> {
 } // run_exprs
 
 fn repl() {
+	let mut runner = Runner::new();
+
 	loop {
 		let mut line = String::new();
 
@@ -74,7 +79,7 @@ fn repl() {
 				match parsing::parse(&line) {
 					Some(Ast::Command(Command::Exit)) => break,
 					Some(Ast::Expression(expr)) => {
-						match expr.run() {
+						match runner.run(expr) {
 							Ok(v) => println!("  {}", v),
 							Err(msg) => println!("{}", msg),
 						}

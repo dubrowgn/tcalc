@@ -12,7 +12,7 @@ pub enum Command {
 #[derive(Debug)]
 pub enum Expression {
 	Literal(Literal),
-	//Variable(Variable),
+	Variable(Variable),
 	Unary(Unary),
 	Binary(Binary),
 }
@@ -45,7 +45,10 @@ pub enum UnaryOp {
 	Negate,
 }
 
-//pub enum Variable
+#[derive(Debug)]
+pub struct Variable {
+	pub name: String
+}
 
 #[derive(Debug)]
 pub enum Literal {
