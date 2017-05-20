@@ -18,5 +18,4 @@ include = [
 getopts = "0.2.14"
 
 [features]
-default = []
 trace = []
