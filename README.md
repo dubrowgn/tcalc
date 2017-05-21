@@ -6,15 +6,17 @@ tcalc supports two modes of usage: terminal and REPL.
 
 ```bash
 # Terminal
-$ tcalc "2^8-1"
+$ tcalc "2**8 - 1"
 255
 ```
 
 ```bash
 # REPL
 $ tcalc
-> 2^8-1
+> 2**8 - 1
   255
+> ans >> 1
+  127
 > exit
 ```
 
@@ -23,10 +25,14 @@ $ tcalc
 | Operator | Description                      |
 |----------|----------------------------------|
 | ( )      | parens                           |
-| -        | negate                           |
-| ^ \*\*   | exponentiation                   |
+| - !      | negate, bitwise NOT              |
+| \*\*     | exponentiation                   |
 | * / %    | multiplication, division, modulo |
 | + -      | addition, subtraction            |
+| << >>    | left shift, right shift          |
+| &        | bitwise AND                      |
+| ^        | bitwise XOR                      |
+| \|       | bitwise OR                       |
 
 ## REPL
 
