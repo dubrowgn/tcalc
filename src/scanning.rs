@@ -257,7 +257,7 @@ mod tests {
 
 	fn expect(scanner: &mut Scanner, tt: TokenType) {
 		let token = unwrap!(scanner.next(), {
-			panic!("Expected token but found None");
+			panic!("Expected Token but found None");
 		});
 
 		assert_eq!(token.token_type, tt);

@@ -1,15 +1,18 @@
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum Ast {
 	Command(Command),
 	Expression(Expression)
 }
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum Command {
 	Exit,
 }
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum Expression {
 	Binary(Binary),
 	Literal(Literal),
@@ -18,6 +21,7 @@ pub enum Expression {
 }
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub struct Binary {
 	pub left: Box<Expression>,
 	pub op: BinaryOp,
@@ -25,6 +29,7 @@ pub struct Binary {
 }
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum BinaryOp {
 	BitAnd,
 	BitOr,
@@ -40,23 +45,27 @@ pub enum BinaryOp {
 }
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub struct Unary {
 	pub op: UnaryOp,
 	pub right: Box<Expression>,
 }
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum UnaryOp {
 	Negate,
 	Not,
 }
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub struct Variable {
 	pub name: String
 }
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum Literal {
 	Number(f64),
 }
