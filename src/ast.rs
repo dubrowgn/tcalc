@@ -11,10 +11,10 @@ pub enum Command {
 
 #[derive(Debug)]
 pub enum Expression {
-	Literal(Literal),
-	Variable(Variable),
-	Unary(Unary),
 	Binary(Binary),
+	Literal(Literal),
+	Unary(Unary),
+	Variable(Variable),
 }
 
 #[derive(Debug)]
@@ -26,12 +26,17 @@ pub struct Binary {
 
 #[derive(Debug)]
 pub enum BinaryOp {
-	Plus,
-	Minus,
-	Multiply,
+	BitAnd,
+	BitOr,
+	BitXor,
 	Divide,
-	Modulo,
 	Exponent,
+	LeftShift,
+	Minus,
+	Modulo,
+	Multiply,
+	Plus,
+	RightShift,
 }
 
 #[derive(Debug)]
@@ -43,6 +48,7 @@ pub struct Unary {
 #[derive(Debug)]
 pub enum UnaryOp {
 	Negate,
+	Not,
 }
 
 #[derive(Debug)]

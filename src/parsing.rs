@@ -70,13 +70,138 @@ impl<'a> Parser<'a> {
 	fn parse_expression(&mut self) -> Option<Expression> {
 		trace!("parse_expression");
 
-		return self.parse_term();
+		return self.parse_bitor();
 	}
 
-	fn parse_term(&mut self) -> Option<Expression> {
-		trace!("parse_term");
+	fn parse_bitor(&mut self) -> Option<Expression> {
+		trace!("parse_bitor");
 
-		let mut expr = unwrap!(self.parse_factor(), {
+		let mut expr = unwrap!(self.parse_bitxor(), {
+			return None;
+		});
+
+		while let Some(t) = self.get_token() {
+			let op;
+			match t.token_type {
+				TokenType::Pipe => op = BinaryOp::BitOr,
+				_ => {
+					self.put_token(t);
+					break;
+				}
+			}
+
+			let right = unwrap!(self.parse_bitxor(), {
+				break;
+			});
+
+			expr = Expression::Binary(Binary {
+				left: Box::new(expr),
+				op: op,
+				right: Box::new(right)
+			});
+		} // while
+
+		return Some(expr);
+	} // parse_bitor
+
+	fn parse_bitxor(&mut self) -> Option<Expression> {
+		trace!("parse_bitxor");
+
+		let mut expr = unwrap!(self.parse_bitand(), {
+			return None;
+		});
+
+		while let Some(t) = self.get_token() {
+			let op;
+			match t.token_type {
+				TokenType::Caret => op = BinaryOp::BitXor,
+				_ => {
+					self.put_token(t);
+					break;
+				}
+			}
+
+			let right = unwrap!(self.parse_bitand(), {
+				break;
+			});
+
+			expr = Expression::Binary(Binary {
+				left: Box::new(expr),
+				op: op,
+				right: Box::new(right)
+			});
+		} // while
+
+		return Some(expr);
+	} // parse_bitxor
+
+	fn parse_bitand(&mut self) -> Option<Expression> {
+		trace!("parse_bitand");
+
+		let mut expr = unwrap!(self.parse_shift(), {
+			return None;
+		});
+
+		while let Some(t) = self.get_token() {
+			let op;
+			match t.token_type {
+				TokenType::Ampersand => op = BinaryOp::BitAnd,
+				_ => {
+					self.put_token(t);
+					break;
+				}
+			}
+
+			let right = unwrap!(self.parse_shift(), {
+				break;
+			});
+
+			expr = Expression::Binary(Binary {
+				left: Box::new(expr),
+				op: op,
+				right: Box::new(right)
+			});
+		} // while
+
+		return Some(expr);
+	} // parse_bitand
+
+	fn parse_shift(&mut self) -> Option<Expression> {
+		trace!("parse_shift");
+
+		let mut expr = unwrap!(self.parse_add_subtract(), {
+			return None;
+		});
+
+		while let Some(t) = self.get_token() {
+			let op;
+			match t.token_type {
+				TokenType::LeftAngleBracketX2 => op = BinaryOp::LeftShift,
+				TokenType::RightAngleBracketX2 => op = BinaryOp::RightShift,
+				_ => {
+					self.put_token(t);
+					break;
+				}
+			}
+
+			let right = unwrap!(self.parse_add_subtract(), {
+				break;
+			});
+
+			expr = Expression::Binary(Binary {
+				left: Box::new(expr),
+				op: op,
+				right: Box::new(right)
+			});
+		} // while
+
+		return Some(expr);
+	} // parse_shift
+
+	fn parse_add_subtract(&mut self) -> Option<Expression> {
+		trace!("parse_add_subtract");
+
+		let mut expr = unwrap!(self.parse_multiply_divide(), {
 			return None;
 		});
 
@@ -91,7 +216,7 @@ impl<'a> Parser<'a> {
 				}
 			}
 
-			let right = unwrap!(self.parse_factor(), {
+			let right = unwrap!(self.parse_multiply_divide(), {
 				break;
 			});
 
@@ -105,8 +230,8 @@ impl<'a> Parser<'a> {
 		return Some(expr);
 	}
 
-	fn parse_factor(&mut self) -> Option<Expression> {
-		trace!("parse_factor");
+	fn parse_multiply_divide(&mut self) -> Option<Expression> {
+		trace!("parse_multiply_divide");
 
 		let mut expr = unwrap!(self.parse_exponent(), {
 			return None;
@@ -136,7 +261,7 @@ impl<'a> Parser<'a> {
 		} // while
 
 		return Some(expr);
-	} // parse_factor
+	} // parse_multiply_divide
 
 	fn parse_exponent(&mut self) -> Option<Expression> {
 		trace!("parse_exponent");
@@ -148,8 +273,7 @@ impl<'a> Parser<'a> {
 		while let Some(t) = self.get_token() {
 			let op;
 			match t.token_type {
-				TokenType::Caret => op = BinaryOp::Exponent,
-				TokenType::StarStar => op = BinaryOp::Exponent,
+				TokenType::StarX2 => op = BinaryOp::Exponent,
 				_ => {
 					self.put_token(t);
 					break;
@@ -180,6 +304,7 @@ impl<'a> Parser<'a> {
 		let op;
 		match t.token_type {
 			TokenType::Minus => op = UnaryOp::Negate,
+			TokenType::Bang => op = UnaryOp::Not,
 			_ => {
 				self.put_token(t);
 				return self.parse_primary();

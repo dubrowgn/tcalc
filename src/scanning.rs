@@ -2,18 +2,23 @@ use std::str::Chars;
 
 #[derive(Debug)]
 pub enum TokenType {
-	LeftParen,
-	RightParen,
-	Plus,
-	Minus,
-	Star,
+	Ampersand,
+	Bang,
 	Caret,
-	Percent,
-	StarStar,
 	ForwardSlash,
-	Number { str: String },
 	Identifier { str: String },
+	LeftAngleBracketX2,
+	LeftParen,
+	Minus,
 	NewLine,
+	Number { str: String },
+	Percent,
+	Pipe,
+	Plus,
+	RightAngleBracketX2,
+	RightParen,
+	Star,
+	StarX2,
 }
 
 pub struct Token {
@@ -65,6 +70,25 @@ impl<'a> Scanner<'a> {
 		self.column += 1;
 	}
 
+	fn expect_char(&mut self, expected: char) -> Option<char> {
+		match self.peek_char() {
+			Some(c) => {
+				if c == expected {
+					Some(c)
+				} else {
+					println!("Expected '{}' but found '{}' instead (line {}, column {})",
+						expected, c, self.line, self.column);
+					None
+				}
+			},
+			None => {
+				println!("Expected '{}' but found end-of-input instead (line {}, column {})",
+					expected, self.line, self.column);
+				None
+			},
+		}
+	}
+
 	fn new_token(&self, token_type: TokenType, length: u32) -> Option<Token> {
 		let t = Token {
 			token_type: token_type,
@@ -104,6 +128,11 @@ impl<'a> Scanner<'a> {
 			'^' => self.scan_caret(),
 			'%' => self.scan_percent(),
 			'/' => self.scan_forward_slash(),
+			'!' => self.scan_bang(),
+			'|' => self.scan_pipe(),
+			'&' => self.scan_ampersand(),
+			'<' => self.scan_left_angle_bracket(),
+			'>' => self.scan_right_angle_bracket(),
 			'\n' => self.scan_new_line(),
 			'.' => self.scan_number(),
 			_ => {
@@ -145,7 +174,7 @@ impl<'a> Scanner<'a> {
 		match self.peek_char() {
 			Some('*') => {
 				self.skip_char();
-				self.new_token(TokenType::StarStar, 2)
+				self.new_token(TokenType::StarX2, 2)
 			}
 			_ => self.new_token(TokenType::Star, 1)
 		}
@@ -164,6 +193,43 @@ impl<'a> Scanner<'a> {
 	fn scan_forward_slash(&mut self) -> Option<Token> {
 		self.skip_char();
 		self.new_token(TokenType::ForwardSlash, 1)
+	}
+
+	fn scan_bang(&mut self) -> Option<Token> {
+		self.skip_char();
+		self.new_token(TokenType::Bang, 1)
+	}
+
+	fn scan_pipe(&mut self) -> Option<Token> {
+		self.skip_char();
+		self.new_token(TokenType::Pipe, 1)
+	}
+
+	fn scan_ampersand(&mut self) -> Option<Token> {
+		self.skip_char();
+		self.new_token(TokenType::Ampersand, 1)
+	}
+
+	fn scan_left_angle_bracket(&mut self) -> Option<Token> {
+		self.skip_char();
+		match self.expect_char('<') {
+			Some(_) => {
+				self.skip_char();
+				self.new_token(TokenType::LeftAngleBracketX2, 2)
+			},
+			None => None,
+		}
+	}
+
+	fn scan_right_angle_bracket(&mut self) -> Option<Token> {
+		self.skip_char();
+		match self.expect_char('>') {
+			Some(_) => {
+				self.skip_char();
+				self.new_token(TokenType::RightAngleBracketX2, 2)
+			},
+			None => None,
+		}
 	}
 
 	fn scan_new_line(&mut self) -> Option<Token> {

@@ -46,7 +46,7 @@ impl Runner {
 	pub fn run_variable(&self, var: Variable) -> Result<f64, String> {
 		match self.scope.get(&var.name) {
 			Some(val) => Ok(*val),
-			None => Err(format!("Unexpected variable {}", var.name)),
+			None => Err(format!("Unexpected variable \"{}\"", var.name)),
 		}
 	} // run_variable
 
@@ -55,6 +55,7 @@ impl Runner {
 
 		match un.op {
 			UnaryOp::Negate => Ok(-r),
+			UnaryOp::Not => Ok(!(r as i64) as f64),
 		}
 	} // run_unary
 
@@ -63,6 +64,11 @@ impl Runner {
 		let r = self.run_expression(*bin.right)?;
 
 		match bin.op {
+			BinaryOp::BitAnd => Ok(((l as i64) & (r as i64)) as f64),
+			BinaryOp::BitOr => Ok(((l as i64) | (r as i64)) as f64),
+			BinaryOp::BitXor => Ok(((l as i64) ^ (r as i64)) as f64),
+			BinaryOp::LeftShift => Ok(((l as i64) << (r as i64)) as f64),
+			BinaryOp::RightShift => Ok(((l as i64) >> (r as i64)) as f64),
 			BinaryOp::Plus => Ok(l + r),
 			BinaryOp::Minus => Ok(l - r),
 			BinaryOp::Multiply => Ok(l * r),
