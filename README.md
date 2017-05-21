@@ -6,8 +6,9 @@ tcalc supports two modes of usage: terminal and REPL.
 
 ```bash
 # Terminal
-$ tcalc "2**8 - 1"
+$ tcalc "2**8 - 1" "ans >> 1"
 255
+127
 ```
 
 ```bash
