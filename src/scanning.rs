@@ -1,4 +1,5 @@
 use std::str::Chars;
+use buffered_iterator::*;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -30,8 +31,7 @@ pub struct Token {
 }
 
 pub struct Scanner<'a> {
-	chars: Chars<'a>,
-	next_char: Option<char>,
+	chars: BufferedIterator<char, Chars<'a>>,
 	line: u32,
 	column: u32,
 }
@@ -46,47 +46,48 @@ impl<'a> Iterator for Scanner<'a> {
 
 impl<'a> Scanner<'a> {
 	pub fn new(input: &'a str) -> Scanner<'a> {
-		let mut chars = input.chars();
+		let chars = input.chars();
+		let buf = BufferedIterator::new(chars);
+
 		Scanner {
-			next_char: chars.next(),
-			chars: chars,
+			chars: buf,
 			line: 1,
 			column: 1,
 		}
 	}
 
+	fn expected_char(&self, expected: char, found: char) {
+		println!("Expected '{}' but found '{}' instead (line {}, column {})",
+			expected, found, self.line, self.column);
+	}
+
+	fn unexpected_char(&self, found: char) {
+		println!("Unexpected character '{}' (line {}, column {})",
+			found, self.line, self.column);
+	}
+
+	fn unexpected_end_of_input(&self) {
+		println!("Unexpected end of input (line {}, column {})",
+			self.line, self.column);
+	}
+
 	fn get_char(&mut self) -> Option<char> {
-		let next = self.next_char;
-		self.next_char = self.chars.next();
 		self.column += 1;
-		next
+		self.chars.pop()
 	}
 
-	fn peek_char(&self) -> Option<char> {
-		self.next_char
+	fn put_char(&mut self, c: char) {
+		self.column -= 1;
+		self.chars.push(c)
 	}
 
-	fn skip_char(&mut self) {
-		self.next_char = self.chars.next();
-		self.column += 1;
-	}
-
-	fn expect_char(&mut self, expected: char) -> Option<char> {
-		match self.peek_char() {
-			Some(c) => {
-				if c == expected {
-					Some(c)
-				} else {
-					println!("Expected '{}' but found '{}' instead (line {}, column {})",
-						expected, c, self.line, self.column);
-					None
-				}
-			},
+	fn expect_char(&mut self) -> Option<char> {
+		match self.get_char() {
+			Some(c) => Some(c),
 			None => {
-				println!("Expected '{}' but found end-of-input instead (line {}, column {})",
-					expected, self.line, self.column);
+				self.unexpected_end_of_input();
 				None
-			},
+			}
 		}
 	}
 
@@ -109,7 +110,7 @@ impl<'a> Scanner<'a> {
 
 		// find the next non-whitespace character
 		loop {
-			c = unwrap!(self.peek_char(), {
+			c = unwrap!(self.get_char(), {
 				return None;
 			});
 
@@ -117,137 +118,88 @@ impl<'a> Scanner<'a> {
 			if c == '\n' || !c.is_whitespace() {
 				break;
 			}
-			
-			self.skip_char();
 		}
 
 		match c {
-			'(' => self.scan_left_paren(),
-			')' => self.scan_right_paren(),
-			'+' => self.scan_plus(),
-			'-' => self.scan_minus(),
+			'(' => self.new_token(TokenType::LeftParen, 1),
+			')' => self.new_token(TokenType::RightParen, 1),
+			'+' => self.new_token(TokenType::Plus, 1),
+			'-' => self.new_token(TokenType::Minus, 1),
 			'*' => self.scan_star(),
-			'^' => self.scan_caret(),
-			'%' => self.scan_percent(),
-			'/' => self.scan_forward_slash(),
-			'!' => self.scan_bang(),
-			'|' => self.scan_pipe(),
-			'&' => self.scan_ampersand(),
+			'^' => self.new_token(TokenType::Caret, 1),
+			'%' => self.new_token(TokenType::Percent, 1),
+			'/' => self.new_token(TokenType::ForwardSlash, 1),
+			'!' => self.new_token(TokenType::Bang, 1),
+			'|' => self.new_token(TokenType::Pipe, 1),
+			'&' => self.new_token(TokenType::Ampersand, 1),
 			'<' => self.scan_left_angle_bracket(),
 			'>' => self.scan_right_angle_bracket(),
 			'\n' => self.scan_new_line(),
-			'.' => self.scan_number(),
+			'.' => {
+				self.put_char(c);
+				self.scan_number()
+			},
+			'_' => {
+				self.put_char(c);
+				self.scan_identifier()
+			},
 			_ => {
+				self.put_char(c);
 				if c.is_numeric() {
 					self.scan_number()
 				} else if c.is_alphabetic() {
 					self.scan_identifier()
 				} else {
-					println!("unexpected character '{}' (line {}, column {})",
-						c, self.line, self.column);
-					Option::None
+					self.unexpected_char(c);
+					None
 				}
-			}
-		}
+			},
+		} // match
 	} // next
 
-	fn scan_left_paren(&mut self) -> Option<Token> {
-		self.skip_char();
-		self.new_token(TokenType::LeftParen, 1)
-	}
-
-	fn scan_right_paren(&mut self) -> Option<Token> {
-		self.skip_char();
-		self.new_token(TokenType::RightParen, 1)
-	}
-
-	fn scan_plus(&mut self) -> Option<Token> {
-		self.skip_char();
-		self.new_token(TokenType::Plus, 1)
-	}
-
-	fn scan_minus(&mut self) -> Option<Token> {
-		self.skip_char();
-		self.new_token(TokenType::Minus, 1)
-	}
-
 	fn scan_star(&mut self) -> Option<Token> {
-		self.skip_char();
-		match self.peek_char() {
-			Some('*') => {
-				self.skip_char();
-				self.new_token(TokenType::StarX2, 2)
-			}
-			_ => self.new_token(TokenType::Star, 1)
+		match self.get_char() {
+			Some('*') => return self.new_token(TokenType::StarX2, 2),
+			Some(c) => self.put_char(c),
+			None => {},
 		}
-	}
 
-	fn scan_caret(&mut self) -> Option<Token> {
-		self.skip_char();
-		self.new_token(TokenType::Caret, 1)
-	}
-
-	fn scan_percent(&mut self) -> Option<Token> {
-		self.skip_char();
-		self.new_token(TokenType::Percent, 1)
-	}
-
-	fn scan_forward_slash(&mut self) -> Option<Token> {
-		self.skip_char();
-		self.new_token(TokenType::ForwardSlash, 1)
-	}
-
-	fn scan_bang(&mut self) -> Option<Token> {
-		self.skip_char();
-		self.new_token(TokenType::Bang, 1)
-	}
-
-	fn scan_pipe(&mut self) -> Option<Token> {
-		self.skip_char();
-		self.new_token(TokenType::Pipe, 1)
-	}
-
-	fn scan_ampersand(&mut self) -> Option<Token> {
-		self.skip_char();
-		self.new_token(TokenType::Ampersand, 1)
-	}
+		self.new_token(TokenType::Star, 1)
+	} // scan_star
 
 	fn scan_left_angle_bracket(&mut self) -> Option<Token> {
-		self.skip_char();
-		match self.expect_char('<') {
-			Some(_) => {
-				self.skip_char();
-				self.new_token(TokenType::LeftAngleBracketX2, 2)
-			},
-			None => None,
+		match self.expect_char() {
+			Some('<') => return self.new_token(TokenType::LeftAngleBracketX2, 2),
+			Some(c) => self.expected_char('<', c),
+			None => {},
 		}
-	}
+
+		None
+	} // scan_left_angle_bracket
 
 	fn scan_right_angle_bracket(&mut self) -> Option<Token> {
-		self.skip_char();
-		match self.expect_char('>') {
-			Some(_) => {
-				self.skip_char();
-				self.new_token(TokenType::RightAngleBracketX2, 2)
-			},
-			None => None,
+		match self.expect_char() {
+			Some('>') => return self.new_token(TokenType::RightAngleBracketX2, 2),
+			Some(c) => self.expected_char('>', c),
+			None => {},
 		}
-	}
+
+		None
+	} // scan_right_angle_bracket
 
 	fn scan_new_line(&mut self) -> Option<Token> {
-		self.skip_char();
 		let t = self.new_token(TokenType::NewLine, 1);
 		self.line += 1;
 		self.column = 0;
 		t
-	}
+	} // scan_new_line
 
 	fn scan_number(&mut self) -> Option<Token> {
 		let start = self.column;
 		let mut is_float = false;
 		let mut str = String::new();
 
-		while let Some(c) = self.peek_char() {
+		while let Some(c) = self.get_char() {
 			match c {
 				'.' => {
 					if is_float {
@@ -255,16 +207,13 @@ impl<'a> Scanner<'a> {
 					}
 					is_float = true;
 				},
-				'_' => {
-					self.skip_char();
-					continue;
-				},
+				'_' => continue,
 				_ => if !c.is_numeric() {
+					self.put_char(c);
 					break;
 				}
 			}
 
-			self.skip_char();
 			str.push(c);
 		}
 
@@ -276,19 +225,18 @@ impl<'a> Scanner<'a> {
 
 	fn scan_identifier(&mut self) -> Option<Token> {
 		let start = self.column;
-
 		let mut str = String::new();
 		str.push(self.get_char().unwrap());
 
-		while let Some(c) = self.peek_char() {
+		while let Some(c) = self.get_char() {
 			match c {
 				'_' => { },
 				_ => if !c.is_alphanumeric() {
+					self.put_char(c);
 					break;
 				}
 			}
 
-			self.skip_char();
 			str.push(c);
 		}
 
