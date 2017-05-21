@@ -1,6 +1,7 @@
 use std::str::Chars;
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum TokenType {
 	Ampersand,
 	Bang,
@@ -44,7 +45,7 @@ impl<'a> Iterator for Scanner<'a> {
 }
 
 impl<'a> Scanner<'a> {
-	pub fn new(input: &'a String) -> Scanner<'a> {
+	pub fn new(input: &'a str) -> Scanner<'a> {
 		let mut chars = input.chars();
 		Scanner {
 			next_char: chars.next(),
@@ -112,7 +113,8 @@ impl<'a> Scanner<'a> {
 				return None;
 			});
 
-			if !c.is_whitespace() {
+			// keep new lines, even though they are "whitespace"
+			if c == '\n' || !c.is_whitespace() {
 				break;
 			}
 			
@@ -296,3 +298,122 @@ impl<'a> Scanner<'a> {
 		)
 	} // scan_identifier
 } // Scanner
+
+#[cfg(test)]
+mod tests {
+	use scanning::*;
+
+	fn setup(input: &str) -> Scanner {
+		Scanner::new(input)
+	}
+
+	fn expect(scanner: &mut Scanner, tt: TokenType) {
+		let token = unwrap!(scanner.next(), {
+			panic!("Expected token but found None");
+		});
+
+		assert_eq!(token.token_type, tt);
+	}
+
+	#[test]
+	fn scan_ampersand() {
+		let mut s = setup("&");
+		expect(&mut s, TokenType::Ampersand);
+	}
+
+	#[test]
+	fn scan_bang() {
+		let mut s = setup("!");
+		expect(&mut s, TokenType::Bang);
+	}
+
+	#[test]
+	fn scan_caret() {
+		let mut s = setup("^");
+		expect(&mut s, TokenType::Caret);
+	}
+
+	#[test]
+	fn scan_forward_slash() {
+		let mut s = setup("/");
+		expect(&mut s, TokenType::ForwardSlash);
+	}
+
+	#[test]
+	fn scan_identifier() {
+		let mut s = setup("ans");
+		expect(&mut s, TokenType::Identifier { str: "ans".to_string() });
+	}
+
+	#[test]
+	fn scan_left_angle_bracket_x2() {
+		let mut s = setup("<<");
+		expect(&mut s, TokenType::LeftAngleBracketX2);
+	}
+
+	#[test]
+	fn scan_left_paren() {
+		let mut s = setup("(");
+		expect(&mut s, TokenType::LeftParen);
+	}
+
+	#[test]
+	fn scan_minus() {
+		let mut s = setup("-");
+		expect(&mut s, TokenType::Minus);
+	}
+
+	#[test]
+	fn scan_new_line() {
+		let mut s = setup("\n");
+		expect(&mut s, TokenType::NewLine);
+	}
+
+	#[test]
+	fn scan_number() {
+		let mut s = setup("123");
+		expect(&mut s, TokenType::Number { str: "123".to_string() });
+	}
+
+	#[test]
+	fn scan_percent() {
+		let mut s = setup("%");
+		expect(&mut s, TokenType::Percent);
+	}
+
+	#[test]
+	fn scan_pipe() {
+		let mut s = setup("|");
+		expect(&mut s, TokenType::Pipe);
+	}
+
+	#[test]
+	fn scan_plus() {
+		let mut s = setup("+");
+		expect(&mut s, TokenType::Plus);
+	}
+
+	#[test]
+	fn scan_right_angle_bracket_x2() {
+		let mut s = setup(">>");
+		expect(&mut s, TokenType::RightAngleBracketX2);
+	}
+
+	#[test]
+	fn scan_right_paren() {
+		let mut s = setup(")");
+		expect(&mut s, TokenType::RightParen);
+	}
+
+	#[test]
+	fn scan_star() {
+		let mut s = setup("*");
+		expect(&mut s, TokenType::Star);
+	}
+
+	#[test]
+	fn scan_star_x2() {
+		let mut s = setup("**");
+		expect(&mut s, TokenType::StarX2);
+	}
+} // mod tests
