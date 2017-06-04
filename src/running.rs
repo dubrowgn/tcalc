@@ -96,20 +96,17 @@ mod tests {
 
 	fn solve(input: &str) -> f64 {
 		let ast = unwrap!(parse(input), {
-			panic!("Expected Ast but found None");
+			panic!("Expected Ast for input \"{}\", but found None", input);
 		});
 
 		let expr = match ast {
 			Ast::Expression(expr) => expr,
-			_ =>  {
-				let msg = format!("Expected Expression but found {:?}", ast);
-				panic!(msg);
-			},
+			_ =>  panic!("Expected Expression for input \"{}\", but found {:?}", input, ast),
 		};
 
 		match Runner::new().run(expr) {
 			Ok(v) => v,
-			Err(msg) => panic!(msg),
+			Err(msg) => panic!("Error for input \"{}\": {}", input, msg),
 		}
 	} // solve
 

@@ -1,8 +1,19 @@
 macro_rules! unwrap {
-	($expr:expr, $fail_body:block) => (match $expr {
-		::std::option::Option::Some(val) => val,
-		::std::option::Option::None => $fail_body
-	})
+	($expr:expr, $fail_body:block) => (
+		match $expr {
+			::std::option::Option::Some(val) => val,
+			::std::option::Option::None => $fail_body
+		}
+	)
+}
+
+macro_rules! matches {
+	($expr:expr, $($pattern:tt)+) => (
+		match $expr {
+			$($pattern)+ => true,
+			_ => false,
+		}
+	)
 }
 
 #[cfg(feature="trace")]

@@ -13,7 +13,7 @@ pub enum TokenType {
 	LeftParen,
 	Minus,
 	NewLine,
-	Number { str: String },
+	Number { str: String, prefix: String },
 	Percent,
 	Pipe,
 	Plus,
@@ -91,6 +91,19 @@ impl<'a> Scanner<'a> {
 		}
 	}
 
+	fn consume_char<FPredicate>(&mut self, check_char: FPredicate) -> Option<char>
+		where FPredicate: Fn(char) -> bool
+	{
+		match self.get_char() {
+			Some(c) if check_char(c) => Some(c),
+			Some(c) => {
+				self.put_char(c);
+				None
+			},
+			None => None
+		}
+	} // consume_char
+
 	fn new_token(&self, token_type: TokenType, length: u32) -> Option<Token> {
 		let t = Token {
 			token_type: token_type,
@@ -135,19 +148,17 @@ impl<'a> Scanner<'a> {
 			'<' => self.scan_left_angle_bracket(),
 			'>' => self.scan_right_angle_bracket(),
 			'\n' => self.scan_new_line(),
-			'.' => {
-				self.put_char(c);
-				self.scan_number()
-			},
 			'_' => {
 				self.put_char(c);
 				self.scan_identifier()
 			},
+			'.' | '0'...'9' => {
+				self.put_char(c);
+				self.scan_number()
+			},
 			_ => {
 				self.put_char(c);
-				if c.is_numeric() {
-					self.scan_number()
-				} else if c.is_alphabetic() {
+				if c.is_alphabetic() {
 					self.scan_identifier()
 				} else {
 					self.unexpected_char(c);
@@ -195,30 +206,55 @@ impl<'a> Scanner<'a> {
 	} // scan_new_line
 
 	fn scan_number(&mut self) -> Option<Token> {
-		let start = self.column;
-		let mut is_float = false;
-		let mut str = String::new();
+		let bin = |c: char| matches!(c, '_' | '0'...'1');
+		let oct = |c: char| matches!(c, '_' | '0'...'7');
+		let dec = |c: char| matches!(c, '_' | '0'...'9');
+		let fdec = |c: char| matches!(c, '_' | '0'...'9' | '.');
+		let hex = |c: char| matches!(c, '_' | '0'...'7' | 'a'...'f');
 
-		while let Some(c) = self.get_char() {
-			match c {
-				'.' => {
-					if is_float {
-						break;
-					}
-					is_float = true;
+		let start = self.column;
+		let mut pred: &Fn(char) -> bool = &fdec;
+		let mut value = String::new();
+		let mut prefix = String::new();
+
+		// check for binary/octal/hexadecimal literal prefixes
+		if let Some(c0) = self.consume_char(|c| c == '0') {
+			match self.get_char() {
+				Some('b') => {
+					prefix.push_str("0b");
+					pred = &bin;
 				},
-				'_' => continue,
-				_ => if !c.is_numeric() {
-					self.put_char(c);
-					break;
-				}
+				Some('o') => {
+					prefix.push_str("0o");
+					pred = &oct;
+				},
+				Some('x') => {
+					prefix.push_str("0x");
+					pred = &hex;
+				},
+				Some(c1) => {
+					self.put_char(c1);
+					self.put_char(c0);
+				},
+				None => self.put_char(c0),
+			}
+		}
+
+		while let Some(c) = self.consume_char(pred) {
+			if c != '_' {
+				value.push(c);
 			}
 
-			str.push(c);
+			if c == '.' {
+				pred = &dec;
+			}
 		}
 
 		self.new_token(
-			TokenType::Number{ str: str },
+			TokenType::Number {
+				str: value,
+				prefix: prefix
+			},
 			self.column - start
 		)
 	} // scan_number
@@ -257,7 +293,7 @@ mod tests {
 
 	fn expect(scanner: &mut Scanner, tt: TokenType) {
 		let token = unwrap!(scanner.next(), {
-			panic!("Expected Token but found None");
+			panic!("Expected Token {:?} but found None", tt);
 		});
 
 		assert_eq!(token.token_type, tt);
@@ -319,8 +355,13 @@ mod tests {
 
 	#[test]
 	fn scan_number() {
-		let mut s = setup("123");
-		expect(&mut s, TokenType::Number { str: "123".to_string() });
+		let mut s = setup("0b11 0o11 0x11 11 11_11 11.11");
+		expect(&mut s, TokenType::Number { str: "11".to_string(), prefix: "0b".to_string() });
+		expect(&mut s, TokenType::Number { str: "11".to_string(), prefix: "0o".to_string() });
+		expect(&mut s, TokenType::Number { str: "11".to_string(), prefix: "0x".to_string() });
+		expect(&mut s, TokenType::Number { str: "11".to_string(), prefix: "".to_string() });
+		expect(&mut s, TokenType::Number { str: "1111".to_string(), prefix: "".to_string() });
+		expect(&mut s, TokenType::Number { str: "11.11".to_string(), prefix: "".to_string() });
 	}
 
 	#[test]

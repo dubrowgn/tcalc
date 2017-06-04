@@ -236,12 +236,29 @@ impl<'a> Parser<'a> {
 		});
 
 		match t.token_type {
-			TokenType::Number { str } => {
-				match str.parse::<f64>() {
-					Ok(f) => Some(Expression::Literal(Literal::Number(f))),
-					Err(msg) => {
-						println!("{}", msg);
-						None
+			TokenType::Number { str, prefix } => {
+				let radix = match prefix.as_str() {
+					"0b" => 2,
+					"0o" => 8,
+					"0x" => 16,
+					_ => 10,
+				};
+
+				if radix == 10 {
+					match str.parse::<f64>() {
+						Ok(n) => Some(Expression::Literal(Literal::Number(n))),
+						Err(msg) => {
+							println!("Failed to parse number \"{}\": {}", str, msg);
+							None
+						}
+					}
+				} else {
+					match u64::from_str_radix(str.as_str(), radix) {
+						Ok(n) => Some(Expression::Literal(Literal::Number(n as f64))),
+						Err(msg) => {
+							println!("Failed to parse number \"{}\": {}", str, msg);
+							None
+						}
 					}
 				}
 			},
@@ -279,7 +296,7 @@ mod tests {
 
 	fn expect(input: &str, expected: Ast) {
 		let result = unwrap!(parse(input), {
-			panic!("Expected Ast but found None");
+			panic!("Expected Ast for input \"{}\", but found None", input);
 		});
 
 		assert_eq!(result, expected);
@@ -288,9 +305,12 @@ mod tests {
 	#[test]
 	fn parse_primary() {
 		// literal
-		expect("123", Ast::Expression(Expression::Literal(Literal::Number(123f64))));
-		expect("123.456", Ast::Expression(Expression::Literal(Literal::Number(123.456f64))));
-		expect("1_234.567", Ast::Expression(Expression::Literal(Literal::Number(1234.567f64))));
+		expect("0b11", Ast::Expression(Expression::Literal(Literal::Number(3f64))));
+		expect("0o11", Ast::Expression(Expression::Literal(Literal::Number(9f64))));
+		expect("0x11", Ast::Expression(Expression::Literal(Literal::Number(17f64))));
+		expect("11", Ast::Expression(Expression::Literal(Literal::Number(11f64))));
+		expect("0_123_456_789", Ast::Expression(Expression::Literal(Literal::Number(123456789f64))));
+		expect("12345.67890", Ast::Expression(Expression::Literal(Literal::Number(12345.6789f64))));
 
 		// variable
 		expect("e", Ast::Expression(Expression::Variable(Variable { name: "e".to_string() })));
