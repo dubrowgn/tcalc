@@ -248,7 +248,7 @@ impl<'a> Parser<'a> {
 					match str.parse::<f64>() {
 						Ok(n) => Some(Expression::Literal(Literal::Number(n))),
 						Err(msg) => {
-							println!("Failed to parse number \"{}\": {}", str, msg);
+							println!("Failed to parse number \"{}{}\": {}", prefix, str, msg);
 							None
 						}
 					}
@@ -256,7 +256,7 @@ impl<'a> Parser<'a> {
 					match u64::from_str_radix(str.as_str(), radix) {
 						Ok(n) => Some(Expression::Literal(Literal::Number(n as f64))),
 						Err(msg) => {
-							println!("Failed to parse number \"{}\": {}", str, msg);
+							println!("Failed to parse number \"{}{}\": {}", prefix, str, msg);
 							None
 						}
 					}
