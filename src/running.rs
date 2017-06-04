@@ -88,3 +88,66 @@ impl Runner {
 		}
 	} // run_binary
 } // Runner
+
+#[cfg(test)]
+mod tests {
+	use parsing::*;
+	use running::*;
+
+	fn solve(input: &str) -> f64 {
+		let ast = unwrap!(parse(input), {
+			panic!("Expected Ast but found None");
+		});
+
+		let expr = match ast {
+			Ast::Expression(expr) => expr,
+			_ =>  {
+				let msg = format!("Expected Expression but found {:?}", ast);
+				panic!(msg);
+			},
+		};
+
+		match Runner::new().run(expr) {
+			Ok(v) => v,
+			Err(msg) => panic!(msg),
+		}
+	} // solve
+
+	#[test]
+	fn solve_expr() {
+		// literal
+		assert_eq!(solve("123"), 123f64);
+		assert_eq!(solve("123.456"), 123.456f64);
+		assert_eq!(solve("1_234.567"), 1_234.567f64);
+
+		// variable
+		assert_eq!(solve("e"), E);
+
+		// parens
+		assert_eq!(solve("(123)"), 123f64);
+		assert_eq!(solve("(pi)"), PI);
+
+		// unary ops
+		assert_eq!(solve("-123"), -123f64);
+		assert_eq!(solve("!e"), !(E as i64) as f64);
+
+		// binary ops
+		assert_eq!(solve("2&7"), 2f64);
+		assert_eq!(solve("2|7"), 7f64);
+		assert_eq!(solve("2^7"), 5f64);
+		assert_eq!(solve("2/7"), 2f64/7f64);
+		assert_eq!(solve("2**7"), 128f64);
+		assert_eq!(solve("2<<7"), 256f64);
+		assert_eq!(solve("2-7"), -5f64);
+		assert_eq!(solve("2%7"), 2f64);
+		assert_eq!(solve("2*7"), 14f64);
+		assert_eq!(solve("2+7"), 9f64);
+		assert_eq!(solve("2>>7"), 0f64);
+
+		// pemdas
+		assert_eq!(solve("6/3-2"), 0f64);
+		assert_eq!(solve("6/(3-2)"), 6f64);
+		assert_eq!(solve("6*3**2"), 54f64);
+		assert_eq!(solve("(6*3)**2"), 324f64);
+	}
+} // mod tests
