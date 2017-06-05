@@ -1,5 +1,5 @@
 # tcalc
-A terminal calculator
+A featureful calculator for when you want to do math in a terminal.
 
 ## Usage
 tcalc supports two modes of usage: terminal and REPL.
@@ -21,7 +21,7 @@ $ tcalc
 > exit
 ```
 
-## Precedence
+## Syntax
 
 | Operator | Description                      |
 |----------|----------------------------------|
@@ -35,17 +35,23 @@ $ tcalc
 | ^        | bitwise XOR                      |
 | \|       | bitwise OR                       |
 
-## REPL
-
-| Commands | Description              |
-|----------|--------------------------|
-| exit     | exit the REPL            |
-| quit     | alias for exit           |
-
-## Built-in Variables
+| Numeric Format | Description                |
+|----------------|----------------------------|
+| 0b[0-1]        | binary literal             |
+| 0o[0-7]        | octal literal              |
+| 0x[0-9a-f]     | hexadecimal literal        |
+| [0-9]          | decimal literal            |
+| [0-9].[0-9]    | fractional decimal literal |
 
 | Variable | Description                   |
 |----------|-------------------------------|
 | e        | Euler's number (e)            |
 | pi       | Archimedes' constant (π)      |
 | ans      | Result of previous expression |
+
+## REPL
+
+| Command | Description              |
+|---------|--------------------------|
+| exit    | exit the REPL            |
+| quit    | alias for exit           |
