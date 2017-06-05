@@ -21,6 +21,11 @@ $ tcalc
 > exit
 ```
 
+## Installation
+
+1. Install [Rust](https://www.rust-lang.org/en-US/install.html)
+2. Run `cargo install tcalc` from your terminal
+
 ## Syntax
 
 | Operator | Description                      |
