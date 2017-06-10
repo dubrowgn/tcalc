@@ -14,10 +14,18 @@ pub enum Command {
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum Expression {
+	Assignment(Assignment),
 	Binary(Binary),
 	Literal(Literal),
 	Unary(Unary),
 	Variable(Variable),
+}
+
+#[derive(Debug)]
+#[derive(PartialEq)]
+pub struct Assignment {
+	pub var: Variable,
+	pub right: Box<Expression>,
 }
 
 #[derive(Debug)]

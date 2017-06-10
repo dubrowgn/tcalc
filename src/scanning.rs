@@ -7,6 +7,7 @@ pub enum TokenType {
 	Ampersand,
 	Bang,
 	Caret,
+	Equal,
 	ForwardSlash,
 	Identifier { str: String },
 	LeftAngleBracketX2,
@@ -147,6 +148,7 @@ impl<'a> Scanner<'a> {
 			'&' => self.new_token(TokenType::Ampersand, 1),
 			'<' => self.scan_left_angle_bracket(),
 			'>' => self.scan_right_angle_bracket(),
+			'=' => self.new_token(TokenType::Equal, 1),
 			'\n' => self.scan_new_line(),
 			'_' => {
 				self.put_char(c);
@@ -345,6 +347,12 @@ mod tests {
 	fn scan_minus() {
 		let mut s = setup("-");
 		expect(&mut s, TokenType::Minus);
+	}
+
+	#[test]
+	fn scan_equal() {
+		let mut s = setup("=");
+		expect(&mut s, TokenType::Equal);
 	}
 
 	#[test]

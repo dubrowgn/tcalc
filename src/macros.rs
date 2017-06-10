@@ -4,7 +4,7 @@ macro_rules! unwrap {
 			::std::option::Option::Some(val) => val,
 			::std::option::Option::None => $fail_body
 		}
-	)
+	);
 }
 
 macro_rules! matches {
@@ -13,7 +13,7 @@ macro_rules! matches {
 			$($pattern)+ => true,
 			_ => false,
 		}
-	)
+	);
 }
 
 #[cfg(feature="trace")]

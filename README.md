@@ -39,6 +39,7 @@ $ tcalc
 | &        | bitwise AND                      |
 | ^        | bitwise XOR                      |
 | \|       | bitwise OR                       |
+| =        | variable assignment              |
 
 | Numeric Format | Description                |
 |----------------|----------------------------|

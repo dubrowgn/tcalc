@@ -28,12 +28,13 @@ impl Runner {
 		ans
 	} // run
 
-	fn run_expression(&self, expr: Expression) -> Result<f64, String> {
+	fn run_expression(&mut self, expr: Expression) -> Result<f64, String> {
 		match expr {
-			Expression::Literal(l) => self.run_literal(l),
-			Expression::Variable(v) => self.run_variable(v),
-			Expression::Unary(u) => self.run_unary(u),
+			Expression::Assignment(a) => self.run_assignment(a),
 			Expression::Binary(b) => self.run_binary(b),
+			Expression::Literal(l) => self.run_literal(l),
+			Expression::Unary(u) => self.run_unary(u),
+			Expression::Variable(v) => self.run_variable(v),
 		}
 	} // run_expression
 
@@ -46,11 +47,11 @@ impl Runner {
 	pub fn run_variable(&self, var: Variable) -> Result<f64, String> {
 		match self.scope.get(&var.name) {
 			Some(val) => Ok(*val),
-			None => Err(format!("Unexpected variable \"{}\"", var.name)),
+			None => Err(format!("Found undefined variable \"{}\"", var.name)),
 		}
 	} // run_variable
 
-	pub fn run_unary(&self, un: Unary) -> Result<f64, String> {
+	pub fn run_unary(&mut self, un: Unary) -> Result<f64, String> {
 		let r = self.run_expression(*un.right)?;
 
 		match un.op {
@@ -59,7 +60,7 @@ impl Runner {
 		}
 	} // run_unary
 
-	pub fn run_binary(&self, bin: Binary) -> Result<f64, String> {
+	pub fn run_binary(&mut self, bin: Binary) -> Result<f64, String> {
 		let l = self.run_expression(*bin.left)?;
 		let r = self.run_expression(*bin.right)?;
 
@@ -87,6 +88,12 @@ impl Runner {
 			BinaryOp::Exponent => Ok(l.powf(r)),
 		}
 	} // run_binary
+
+	pub fn run_assignment(&mut self, assign: Assignment) -> Result<f64, String> {
+		let r = self.run_expression(*assign.right)?;
+		self.scope.insert(assign.var.name, r);
+		Ok(r)
+	} // run_assignment
 } // Runner
 
 #[cfg(test)]
@@ -111,24 +118,36 @@ mod tests {
 	} // solve
 
 	#[test]
-	fn solve_expr() {
-		// literal
+	fn solve_literal() {
 		assert_eq!(solve("123"), 123f64);
 		assert_eq!(solve("123.456"), 123.456f64);
 		assert_eq!(solve("1_234.567"), 1_234.567f64);
+	}
 
-		// variable
+	#[test]
+	fn solve_assignment() {
+		assert_eq!(solve("a=123"), 123f64);
+	}
+
+	#[test]
+	fn solve_variable() {
 		assert_eq!(solve("e"), E);
+	}
 
-		// parens
+	#[test]
+	fn solve_parens() {
 		assert_eq!(solve("(123)"), 123f64);
 		assert_eq!(solve("(pi)"), PI);
+	}
 
-		// unary ops
+	#[test]
+	fn solve_unary_ops() {
 		assert_eq!(solve("-123"), -123f64);
 		assert_eq!(solve("!e"), !(E as i64) as f64);
+	}
 
-		// binary ops
+	#[test]
+	fn solve_binary_ops() {
 		assert_eq!(solve("2&7"), 2f64);
 		assert_eq!(solve("2|7"), 7f64);
 		assert_eq!(solve("2^7"), 5f64);
@@ -140,8 +159,10 @@ mod tests {
 		assert_eq!(solve("2*7"), 14f64);
 		assert_eq!(solve("2+7"), 9f64);
 		assert_eq!(solve("2>>7"), 0f64);
+	}
 
-		// pemdas
+	#[test]
+	fn solve_pemdas() {
 		assert_eq!(solve("6/3-2"), 0f64);
 		assert_eq!(solve("6/(3-2)"), 6f64);
 		assert_eq!(solve("6*3**2"), 54f64);
