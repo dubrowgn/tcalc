@@ -7,6 +7,24 @@ macro_rules! unwrap {
 	);
 }
 
+macro_rules! is_none {
+	($expr:expr) => (
+		match $expr {
+			::std::option::Option::None => true,
+			_ => false,
+		}
+	);
+}
+
+macro_rules! is_some {
+	($expr:expr) => (
+		match $expr {
+			::std::option::Option::None => false,
+			_ => true,
+		}
+	);
+}
+
 macro_rules! matches {
 	($expr:expr, $($pattern:tt)+) => (
 		match $expr {

@@ -16,6 +16,11 @@ impl<'a> Parser<'a> {
 		}
 	}
 
+	fn unexpected_token(&self, found: &Token) {
+		println!("Unexpected token '{:?}' (line {}, col {})",
+			found.token_type, found.line, found.column);
+	}
+
 	fn get_token(&mut self) -> Option<Token> {
 		self.scanner.pop()
 	}
@@ -34,18 +39,38 @@ impl<'a> Parser<'a> {
 		}
 	}
 
+	fn expect_terminal(&mut self) -> bool {
+		// end of input
+		let t = unwrap!(self.get_token(), {
+			return true;
+		});
+
+		// explicit terminal characters
+		match t.token_type {
+			TokenType::NewLine => true,
+			_ => {
+				self.unexpected_token(&t);
+				false
+			},
+		}
+	} // expect_terminal
+
 	fn parse_ast(&mut self) -> Option<Ast> {
 		trace!("parse_ast");
 
-		if let Some(cmd) = self.parse_command() {
-			return Some(Ast::Command(cmd));
+		let ast = if let Some(cmd) = self.parse_command() {
+			Some(Ast::Command(cmd))
+		} else if let Some(expr) = self.parse_expression() {
+			Some(Ast::Expression(expr))
+		} else {
+			return None;
+		};
+
+		if !self.expect_terminal() {
+			return None;
 		}
 
-		if let Some(expr) = self.parse_expression() {
-			return Some(Ast::Expression(expr));
-		}
-
-		None
+		ast
 	}
 
 	fn parse_command(&mut self) -> Option<Command> {
@@ -71,7 +96,7 @@ impl<'a> Parser<'a> {
 		trace!("parse_expression");
 
 		self.parse_assign()
-	}
+	} // parse_expression
 
 	fn parse_assign(&mut self) -> Option<Expression> {
 		trace!("parse_assign");
@@ -306,8 +331,7 @@ impl<'a> Parser<'a> {
 				match self.expect_token() {
 					Some(Token { token_type: TokenType::RightParen, .. }) => expr,
 					Some(t) => {
-						println!("Expected token RightParen, but found '{:?}' (line {}, col {})",
-							t.token_type, t.line, t.column);
+						self.unexpected_token(&t);
 						None
 					},
 					None => None,
@@ -529,5 +553,10 @@ mod tests {
 			op: BinaryOp::Exponent,
 			right: Box::new(Expression::Literal(Literal::Number(2f64))),
 		})));
+	}
+
+	#[test]
+	fn parse_unexpected_terminal() {
+		assert_eq!(parse("1+2)"), None);
 	}
 } // mod tests
