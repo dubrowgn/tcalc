@@ -212,7 +212,7 @@ impl<'a> Scanner<'a> {
 		let oct = |c: char| matches!(c, '_' | '0'...'7');
 		let dec = |c: char| matches!(c, '_' | '0'...'9');
 		let fdec = |c: char| matches!(c, '_' | '0'...'9' | '.');
-		let hex = |c: char| matches!(c, '_' | '0'...'7' | 'a'...'f');
+		let hex = |c: char| matches!(c, '_' | '0'...'9' | 'a'...'f');
 
 		let start = self.column;
 		let mut pred: &Fn(char) -> bool = &fdec;
@@ -363,11 +363,11 @@ mod tests {
 
 	#[test]
 	fn scan_number() {
-		let mut s = setup("0b11 0o11 0x11 11 11_11 11.11");
-		expect(&mut s, TokenType::Number { str: "11".to_string(), prefix: "0b".to_string() });
-		expect(&mut s, TokenType::Number { str: "11".to_string(), prefix: "0o".to_string() });
-		expect(&mut s, TokenType::Number { str: "11".to_string(), prefix: "0x".to_string() });
-		expect(&mut s, TokenType::Number { str: "11".to_string(), prefix: "".to_string() });
+		let mut s = setup("0b01 0o01234567 0x0123456789abcdef 0123456789 11_11 11.11");
+		expect(&mut s, TokenType::Number { str: "01".to_string(), prefix: "0b".to_string() });
+		expect(&mut s, TokenType::Number { str: "01234567".to_string(), prefix: "0o".to_string() });
+		expect(&mut s, TokenType::Number { str: "0123456789abcdef".to_string(), prefix: "0x".to_string() });
+		expect(&mut s, TokenType::Number { str: "0123456789".to_string(), prefix: "".to_string() });
 		expect(&mut s, TokenType::Number { str: "1111".to_string(), prefix: "".to_string() });
 		expect(&mut s, TokenType::Number { str: "11.11".to_string(), prefix: "".to_string() });
 	}

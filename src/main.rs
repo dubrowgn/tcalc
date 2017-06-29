@@ -97,12 +97,12 @@ fn main() {
 	let opts = build_options();
 
 	let matches = match opts.parse(&args[1..]) {
-		Ok(m) => { m }
-		Err(f) => {
-			println!("{}", f);
+		Ok(ms) => ms,
+		Err(msg) => {
+			println!("{}", msg);
 			print_try_help();
 			return;
-		}
+		},
 	};
 
 	if matches.opt_present("help") {
