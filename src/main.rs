@@ -1,9 +1,10 @@
 extern crate getopts;
+extern crate rustyline;
 
 use getopts::Options;
+use rustyline::error::ReadlineError;
+use rustyline::Editor;
 use std::env;
-use std::io;
-use std::io::Write;
 
 #[macro_use]
 mod macros;
@@ -67,15 +68,12 @@ fn run_exprs<'a, I>(inputs: I) where I: Iterator<Item=&'a String> {
 
 fn repl() {
 	let mut runner = Runner::new();
+	let mut rl = Editor::<()>::new();
 
 	loop {
-		let mut line = String::new();
-
-		print!("> ");
-		io::stdout().flush().expect("Could not flush stdout");
-		
-		match io::stdin().read_line(&mut line) {
-			Ok(_) => {
+		match rl.readline("> ") {
+			Ok(line) => {
+				rl.add_history_entry(&line);
 				match parsing::parse(&line) {
 					Some(Ast::Command(Command::Exit)) => break,
 					Some(Ast::Expression(expr)) => {
@@ -85,10 +83,12 @@ fn repl() {
 						}
 					},
 					None => {}
-				}
-			}
+				} // match
+			},
+			Err(ReadlineError::Interrupted) => { },
+			Err(ReadlineError::Eof) => { },
 			Err(msg) => println!("error: {}", msg),
-		}
+		} // match
 	} // loop
 } // repl
 
