@@ -1,6 +1,8 @@
 # tcalc
 A featureful calculator for when you want to do math in a terminal.
 
+[![Build Status](https://travis-ci.org/dubrowgn/tcalc.svg?branch=master)](https://travis-ci.org/dubrowgn/tcalc)
+
 ## Usage
 tcalc supports two modes of usage: terminal and REPL.
 

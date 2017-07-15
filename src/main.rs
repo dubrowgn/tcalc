@@ -73,7 +73,7 @@ fn repl() {
 	loop {
 		match rl.readline("> ") {
 			Ok(line) => {
-				rl.add_history_entry(&line);
+				rl.add_history_entry(line.as_str());
 				match parsing::parse(&line) {
 					Some(Ast::Command(Command::Exit)) => break,
 					Some(Ast::Expression(expr)) => {
