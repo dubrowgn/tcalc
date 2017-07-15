@@ -70,6 +70,18 @@ fn repl() {
 	let mut runner = Runner::new();
 	let mut rl = Editor::<()>::new();
 
+	let history_path = match env::home_dir() {
+		Some(mut home_dir) => {
+			home_dir.push(".tcalc_history");
+			Some(home_dir)
+		},
+		_ => None
+	};
+
+	if let Some(ref path) = history_path {
+		match rl.load_history(&path) { _ => { } }
+	}
+
 	loop {
 		match rl.readline("> ") {
 			Ok(line) => {
@@ -86,10 +98,14 @@ fn repl() {
 				} // match
 			},
 			Err(ReadlineError::Interrupted) => { },
-			Err(ReadlineError::Eof) => { },
+			Err(ReadlineError::Eof) => break,
 			Err(msg) => println!("error: {}", msg),
 		} // match
 	} // loop
+
+	if let Some(ref path) = history_path {
+		match rl.save_history(&path) { _ => { } }
+	}
 } // repl
 
 fn main() {

@@ -16,8 +16,9 @@ include = [
 
 [dependencies]
 getopts = "0.2.14"
+rustyline = "1.0.0"
 #rustyline = { path = "../rustyline" }
-rustyline = { git = "https://github.com/dubrowgn/rustyline", branch = "tcalc" }
+#rustyline = { git = "https://github.com/dubrowgn/rustyline", branch = "tcalc" }
 
 [features]
 trace = []
