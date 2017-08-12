@@ -1,9 +1,9 @@
 extern crate getopts;
-extern crate rustyline;
+extern crate tcalc_rustyline;
 
 use getopts::Options;
-use rustyline::error::ReadlineError;
-use rustyline::Editor;
+use tcalc_rustyline::error::ReadlineError;
+use tcalc_rustyline::Editor;
 use std::env;
 
 #[macro_use]
