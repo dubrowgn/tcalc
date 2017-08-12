@@ -74,15 +74,17 @@ impl Runner {
 			BinaryOp::Minus => Ok(l - r),
 			BinaryOp::Multiply => Ok(l * r),
 			BinaryOp::Divide => {
-				match r {
-					0f64 => Err("Cannot divide by zero".to_string()),
-					_ => Ok(l / r)
+				if r == 0f64 {
+					Err("Cannot divide by zero".to_string())
+				} else {
+					Ok(l / r)
 				}
 			},
 			BinaryOp::Modulo => {
-				match r {
-					0f64 => Err("Cannot divide by zero".to_string()),
-					_ => Ok(l % r)
+				if r == 0f64 {
+					Err("Cannot divide by zero".to_string())
+				} else {
+					Ok(l % r)
 				}
 			},
 			BinaryOp::Exponent => Ok(l.powf(r)),
