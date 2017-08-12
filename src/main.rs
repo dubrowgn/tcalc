@@ -1,7 +1,5 @@
-extern crate getopts;
 extern crate tcalc_rustyline;
 
-use getopts::Options;
 use tcalc_rustyline::error::ReadlineError;
 use tcalc_rustyline::Editor;
 use std::env;
@@ -18,26 +16,20 @@ mod running;
 use ast::*;
 use running::*;
 
-fn build_options() -> Options {
-	let mut opts = Options::new();
-
-	opts.optflag("", "help", "print this help menu");
-	opts.optflag("", "version", "print version information");
-
-	opts
-}
-
 fn print_usage() {
-	print!("Usage: {} [OPTION] EXPRESSIONS", env!("CARGO_PKG_NAME"));
+	println!("Usage: {} [OPTION] EXPRESSIONS", env!("CARGO_PKG_NAME"));
 }
 
-fn print_opts(opts: &Options) {
-	print!("{}", opts.usage(""));
+fn print_opts() {
+	println!("Options:");
+	println!("    --help              print this help menu");
+	println!("    --version           print version information");
 }
 
-fn print_help(opts: &Options) {
+fn print_help() {
 	print_usage();
-	print_opts(opts);
+	println!();
+	print_opts();
 }
 
 fn print_try_help() {
@@ -50,7 +42,7 @@ fn print_version() {
 	println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
 }
 
-fn run_exprs<'a, I>(inputs: I) where I: Iterator<Item=&'a String> {
+fn run_exprs<'a, I>(inputs: I) where I: Iterator<Item=String> {
 	let mut runner = Runner::new();
 
 	for str in inputs {
@@ -109,31 +101,40 @@ fn repl() {
 } // repl
 
 fn main() {
-	let args: Vec<String> = env::args().collect();
-	let opts = build_options();
+	let mut args = env::args();
 
-	let matches = match opts.parse(&args[1..]) {
-		Ok(ms) => ms,
-		Err(msg) => {
-			println!("{}", msg);
-			print_try_help();
-			return;
-		},
-	};
-
-	if matches.opt_present("help") {
-		print_help(&opts);
-		return;
-	}
-
-	if matches.opt_present("version") {
-		print_version();
-		return;
-	}
-
-	if matches.free.is_empty() {
+	// start repl if there are no arguments
+	if args.len() < 2 {
 		repl();
-	} else {
-		run_exprs(matches.free.iter());
+		return;
 	}
+
+	// check for arguments
+	let mut peekable = args.by_ref().skip(1).peekable();
+	loop {
+		match peekable.peek() {
+			Some(arg) => match arg.as_str() {
+				"--help" => {
+					print_help();
+					return;
+				},
+				"--version" => {
+					print_version();
+					return;
+				},
+				str => {
+					if str.starts_with("--") {
+						println!("Unknown option '{}'", str);
+						print_try_help();
+						return;
+					}
+					break;
+				},
+			}, // match
+			_ => break
+		} // match
+	} // loop
+
+	// evaluate remaining inputs
+	run_exprs(peekable);
 } // main
