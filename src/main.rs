@@ -89,7 +89,8 @@ fn repl() {
 					None => {}
 				} // match
 			},
-			Err(ReadlineError::Interrupted) => { },
+			Err(ReadlineError::Cancelled) => { },
+			Err(ReadlineError::Interrupted) => break,
 			Err(ReadlineError::Eof) => break,
 			Err(msg) => println!("error: {}", msg),
 		} // match
