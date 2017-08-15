@@ -124,7 +124,8 @@ fn main() {
 				},
 				str => {
 					if str.starts_with("--") {
-						println!("Unknown option '{}'", str);
+						println!("Unrecognized option '{}'", str);
+						println!("");
 						print_try_help();
 						return;
 					}
