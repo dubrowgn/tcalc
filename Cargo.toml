@@ -15,7 +15,8 @@ include = [
 ]
 
 [dependencies]
-tcalc-rustyline = "1.0.1"
+dirs = "2.0.1"
+tcalc-rustyline = "1.0.2"
 #tcalc-rustyline = { path = "../rustyline" }
 
 [features]

@@ -1,3 +1,4 @@
+extern crate dirs;
 extern crate tcalc_rustyline;
 
 use tcalc_rustyline::error::ReadlineError;
@@ -62,10 +63,10 @@ fn repl() {
 	let mut runner = Runner::new();
 	let mut rl = Editor::<()>::new();
 
-	let history_path = match env::home_dir() {
-		Some(mut home_dir) => {
-			home_dir.push(".tcalc_history");
-			Some(home_dir)
+	let history_path = match dirs::cache_dir() {
+		Some(mut hist_dir) => {
+			hist_dir.push("tcalc_history");
+			Some(hist_dir)
 		},
 		_ => None
 	};
