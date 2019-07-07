@@ -1,7 +1,7 @@
 [package]
 name = "tcalc"
 description = "A featureful calculator for when you want to do math in a terminal."
-version = "1.6.13"
+version = "1.6.14"
 authors = ["dubrowgn"]
 license = "MIT"
 repository = "https://github.com/dubrowgn/tcalc.git"
