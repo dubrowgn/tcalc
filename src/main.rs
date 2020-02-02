@@ -1,5 +1,5 @@
-extern crate dirs;
-extern crate tcalc_rustyline;
+use dirs;
+
 
 use tcalc_rustyline::error::ReadlineError;
 use tcalc_rustyline::Editor;

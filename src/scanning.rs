@@ -289,11 +289,11 @@ impl<'a> Scanner<'a> {
 mod tests {
 	use crate::scanning::*;
 
-	fn setup(input: &str) -> Scanner {
+	fn setup(input: &str) -> Scanner<'_> {
 		Scanner::new(input)
 	}
 
-	fn expect(scanner: &mut Scanner, tt: TokenType) {
+	fn expect(scanner: &mut Scanner<'_>, tt: TokenType) {
 		let token = unwrap!(scanner.next(), {
 			panic!("Expected Token {:?} but found None", tt);
 		});

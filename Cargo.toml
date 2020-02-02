@@ -6,6 +6,7 @@ authors = ["dubrowgn"]
 license = "MIT"
 repository = "https://github.com/dubrowgn/tcalc.git"
 documentation = "https://github.com/dubrowgn/tcalc"
+edition = "2018"
 
 include = [
 	"Cargo.toml",

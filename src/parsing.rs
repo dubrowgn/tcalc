@@ -7,7 +7,7 @@ struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-	fn new(input: &str) -> Parser {
+	fn new(input: &str) -> Parser<'_> {
 		let scanner = Scanner::new(input);
 		let buf = BufferedIterator::new(scanner);
 
@@ -135,7 +135,7 @@ impl<'a> Parser<'a> {
 	} // parse_assign
 
 	fn parse_binary<FOp, FNext>(&mut self, map_op: FOp, parse_next: FNext) -> Option<Expression>
-		where FOp: Fn(&TokenType) -> Option<BinaryOp>, FNext: Fn(&mut Parser) -> Option<Expression>
+		where FOp: Fn(&TokenType) -> Option<BinaryOp>, FNext: Fn(&mut Parser<'_>) -> Option<Expression>
 	{
 		let mut expr = unwrap!(parse_next(self), {
 			return None;
