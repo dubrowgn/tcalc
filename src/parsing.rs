@@ -1,6 +1,6 @@
-use ast::*;
-use buffered_iterator::*;
-use scanning::*;
+use crate::ast::*;
+use crate::buffered_iterator::*;
+use crate::scanning::*;
 
 struct Parser<'a> {
 	scanner: BufferedIterator<Token, Scanner<'a>>,
@@ -352,7 +352,7 @@ pub fn parse<'a>(input: &'a str) -> Option<Ast> {
 
 #[cfg(test)]
 mod tests {
-	use parsing::*;
+	use crate::parsing::*;
 
 	fn expect(input: &str, expected: Ast) {
 		let result = unwrap!(parse(input), {

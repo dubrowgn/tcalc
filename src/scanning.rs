@@ -1,5 +1,5 @@
 use std::str::Chars;
-use buffered_iterator::*;
+use crate::buffered_iterator::*;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -154,7 +154,7 @@ impl<'a> Scanner<'a> {
 				self.put_char(c);
 				self.scan_identifier()
 			},
-			'.' | '0'...'9' => {
+			'.' | '0'..='9' => {
 				self.put_char(c);
 				self.scan_number()
 			},
@@ -208,14 +208,14 @@ impl<'a> Scanner<'a> {
 	} // scan_new_line
 
 	fn scan_number(&mut self) -> Option<Token> {
-		let bin = |c: char| matches!(c, '_' | '0'...'1');
-		let oct = |c: char| matches!(c, '_' | '0'...'7');
-		let dec = |c: char| matches!(c, '_' | '0'...'9');
-		let fdec = |c: char| matches!(c, '_' | '0'...'9' | '.');
-		let hex = |c: char| matches!(c, '_' | '0'...'9' | 'a'...'f' | 'A'...'F');
+		let bin = |c: char| matches!(c, '_' | '0'..='1');
+		let oct = |c: char| matches!(c, '_' | '0'..='7');
+		let dec = |c: char| matches!(c, '_' | '0'..='9');
+		let fdec = |c: char| matches!(c, '_' | '0'..='9' | '.');
+		let hex = |c: char| matches!(c, '_' | '0'..='9' | 'a'..='f' | 'A'..='F');
 
 		let start = self.column;
-		let mut pred: &Fn(char) -> bool = &fdec;
+		let mut pred: &dyn Fn(char) -> bool = &fdec;
 		let mut value = String::new();
 		let mut prefix = String::new();
 
@@ -287,7 +287,7 @@ impl<'a> Scanner<'a> {
 
 #[cfg(test)]
 mod tests {
-	use scanning::*;
+	use crate::scanning::*;
 
 	fn setup(input: &str) -> Scanner {
 		Scanner::new(input)

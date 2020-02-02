@@ -14,8 +14,8 @@ mod scanning;
 mod parsing;
 mod running;
 
-use ast::*;
-use running::*;
+use crate::ast::*;
+use crate::running::*;
 
 fn print_usage() {
 	println!("Usage: {} [OPTION] EXPRESSIONS", env!("CARGO_PKG_NAME"));

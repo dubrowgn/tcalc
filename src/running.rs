@@ -1,4 +1,4 @@
-use ast::*;
+use crate::ast::*;
 use std::collections::HashMap;
 use std::f64::consts::*;
 
@@ -100,8 +100,8 @@ impl Runner {
 
 #[cfg(test)]
 mod tests {
-	use parsing::*;
-	use running::*;
+	use crate::parsing::*;
+	use crate::running::*;
 
 	fn solve(input: &str) -> f64 {
 		let ast = unwrap!(parse(input), {
