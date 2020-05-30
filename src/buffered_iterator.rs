@@ -1,23 +1,23 @@
-use std::vec::Vec;
 use std::iter::Iterator;
+use std::vec::Vec;
 
-pub struct BufferedIterator<T, TIter:Iterator<Item=T>> {
+pub struct BufferedIterator<T, TIter: Iterator<Item = T>> {
 	itr: TIter,
-	buf: Vec<T>
+	buf: Vec<T>,
 }
 
-impl<T, TIter:Iterator<Item=T>> BufferedIterator<T, TIter> {
+impl<T, TIter: Iterator<Item = T>> BufferedIterator<T, TIter> {
 	pub fn new(itr: TIter) -> BufferedIterator<T, TIter> {
 		BufferedIterator {
 			itr: itr,
-			buf: Vec::new()
+			buf: Vec::new(),
 		}
 	} // new
 
 	pub fn pop(&mut self) -> Option<T> {
 		return match self.buf.is_empty() {
 			true => self.itr.next(),
-			false => self.buf.pop()
+			false => self.buf.pop(),
 		};
 	} // pop
 

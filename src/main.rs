@@ -1,18 +1,15 @@
-use dirs;
-
-
+use std::env;
 use tcalc_rustyline::error::ReadlineError;
 use tcalc_rustyline::Editor;
-use std::env;
 
 #[macro_use]
 mod macros;
 
-mod buffered_iterator;
 mod ast;
-mod scanning;
+mod buffered_iterator;
 mod parsing;
 mod running;
+mod scanning;
 
 use crate::ast::*;
 use crate::running::*;
@@ -36,23 +33,27 @@ fn print_help() {
 fn print_try_help() {
 	print_usage();
 	println!();
-	println!("Try '{} --help' for more information.", env!("CARGO_PKG_NAME"));
+	println!(
+		"Try '{} --help' for more information.",
+		env!("CARGO_PKG_NAME")
+	);
 }
 
 fn print_version() {
 	println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
 }
 
-fn run_exprs<'a, I>(inputs: I) where I: Iterator<Item=String> {
+fn run_exprs<'a, I>(inputs: I)
+where
+	I: Iterator<Item = String>,
+{
 	let mut runner = Runner::new();
 
 	for str in inputs {
 		match parsing::parse(&str) {
-			Some(Ast::Expression(expr)) => {
-				match runner.run(expr) {
-					Ok(v) => println!("{}", v),
-					Err(msg) => println!("{}", msg),
-				}
+			Some(Ast::Expression(expr)) => match runner.run_expression(expr) {
+				Ok(v) => println!("{}", v),
+				Err(msg) => println!("{}", msg),
 			},
 			_ => {}
 		} // match
@@ -67,12 +68,14 @@ fn repl() {
 		Some(mut hist_dir) => {
 			hist_dir.push("tcalc_history");
 			Some(hist_dir)
-		},
-		_ => None
+		}
+		_ => None,
 	};
 
 	if let Some(ref path) = history_path {
-		match rl.load_history(&path) { _ => { } }
+		match rl.load_history(&path) {
+			_ => {}
+		}
 	}
 
 	loop {
@@ -81,16 +84,18 @@ fn repl() {
 				rl.add_history_entry(line.as_str());
 				match parsing::parse(&line) {
 					Some(Ast::Command(Command::Exit)) => break,
-					Some(Ast::Expression(expr)) => {
-						match runner.run(expr) {
-							Ok(v) => println!("  {}", v),
-							Err(msg) => println!("{}", msg),
-						}
+					Some(Ast::Expression(expr)) => match runner.run_expression(expr) {
+						Ok(v) => println!("  {}", v),
+						Err(msg) => println!("{}", msg),
+					},
+					Some(Ast::Statement(stmt)) => match runner.run_statement(stmt) {
+						Ok(_) => {}
+						Err(msg) => println!("{}", msg),
 					},
 					None => {}
 				} // match
-			},
-			Err(ReadlineError::Cancelled) => { },
+			}
+			Err(ReadlineError::Cancelled) => {}
 			Err(ReadlineError::Interrupted) => break,
 			Err(ReadlineError::Eof) => break,
 			Err(msg) => println!("error: {}", msg),
@@ -98,7 +103,9 @@ fn repl() {
 	} // loop
 
 	if let Some(ref path) = history_path {
-		match rl.save_history(&path) { _ => { } }
+		match rl.save_history(&path) {
+			_ => {}
+		}
 	}
 } // repl
 
@@ -119,22 +126,22 @@ fn main() {
 				"--help" => {
 					print_help();
 					return;
-				},
+				}
 				"--version" => {
 					print_version();
 					return;
-				},
+				}
 				str => {
 					if str.starts_with("--") {
 						println!("Unrecognized option '{}'", str);
-						println!("");
+						println!();
 						print_try_help();
 						return;
 					}
 					break;
-				},
+				}
 			}, // match
-			_ => break
+			_ => break,
 		} // match
 	} // loop
 
