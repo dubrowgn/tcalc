@@ -43,7 +43,7 @@ fn print_version() {
 	println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
 }
 
-fn run_exprs<'a, I>(inputs: I)
+fn run_exprs<I>(inputs: I)
 where
 	I: Iterator<Item = String>,
 {
@@ -53,6 +53,10 @@ where
 		match parsing::parse(&str) {
 			Some(Ast::Expression(expr)) => match runner.run_expression(expr) {
 				Ok(v) => println!("{}", v),
+				Err(msg) => println!("{}", msg),
+			},
+			Some(Ast::Statement(stmt)) => match runner.run_statement(stmt) {
+				Ok(_) => {}
 				Err(msg) => println!("{}", msg),
 			},
 			_ => {}
@@ -73,9 +77,7 @@ fn repl() {
 	};
 
 	if let Some(ref path) = history_path {
-		match rl.load_history(&path) {
-			_ => {}
-		}
+		let _ = rl.load_history(&path);
 	}
 
 	loop {
@@ -103,8 +105,8 @@ fn repl() {
 	} // loop
 
 	if let Some(ref path) = history_path {
-		match rl.save_history(&path) {
-			_ => {}
+		if let Err(msg) = rl.save_history(&path) {
+			println!("Failed to save history: '{}'", msg);
 		}
 	}
 } // repl
@@ -120,30 +122,27 @@ fn main() {
 
 	// check for arguments
 	let mut peekable = args.by_ref().skip(1).peekable();
-	loop {
-		match peekable.peek() {
-			Some(arg) => match arg.as_str() {
-				"--help" => {
-					print_help();
+	while let Some(arg) = peekable.peek() {
+		match arg.as_str() {
+			"--help" => {
+				print_help();
+				return;
+			}
+			"--version" => {
+				print_version();
+				return;
+			}
+			str => {
+				if str.starts_with("--") {
+					println!("Unrecognized option '{}'", str);
+					println!();
+					print_try_help();
 					return;
 				}
-				"--version" => {
-					print_version();
-					return;
-				}
-				str => {
-					if str.starts_with("--") {
-						println!("Unrecognized option '{}'", str);
-						println!();
-						print_try_help();
-						return;
-					}
-					break;
-				}
-			}, // match
-			_ => break,
-		} // match
-	} // loop
+				break;
+			}
+		}
+	}
 
 	// evaluate remaining inputs
 	run_exprs(peekable);

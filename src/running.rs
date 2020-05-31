@@ -3,17 +3,43 @@ use std::collections::HashMap;
 use std::f64::consts::*;
 
 pub struct Runner {
-	scope: HashMap<String, f64>,
+	scopes: Vec<HashMap<String, f64>>,
 }
 
 impl Runner {
 	pub fn new() -> Runner {
-		let mut scope = HashMap::new();
+		let mut sys_scope = HashMap::new();
 
-		scope.insert("e".to_string(), E);
-		scope.insert("pi".to_string(), PI);
+		sys_scope.insert("e".to_string(), E);
+		sys_scope.insert("pi".to_string(), PI);
 
-		Runner { scope }
+		Runner {
+			scopes: vec![sys_scope, HashMap::new()],
+		}
+	}
+
+	fn scope_get(&self, name: &str) -> Option<&f64> {
+		for scope in self.scopes.iter().rev() {
+			if let Some(val) = scope.get(name) {
+				return Some(val);
+			}
+		}
+
+		None
+	}
+
+	fn scope_set(&mut self, name: String, value: f64) {
+		self.scopes.last_mut().unwrap().insert(name, value);
+	}
+
+	fn scope_unset(&mut self, name: &str) -> Option<f64> {
+		for scope in self.scopes.iter_mut().skip(1).rev() {
+			if let Some(val) = scope.remove(name) {
+				return Some(val);
+			}
+		}
+
+		None
 	}
 
 	pub fn run_expression(&mut self, expr: Expression) -> Result<f64, String> {
@@ -25,7 +51,7 @@ impl Runner {
 			Expression::Variable(v) => self.run_variable(v),
 		}?;
 
-		self.scope.insert("ans".to_string(), ans);
+		self.scope_set("ans".to_string(), ans);
 
 		Ok(ans)
 	}
@@ -43,7 +69,7 @@ impl Runner {
 	} // run_literal
 
 	fn run_variable(&self, var: Variable) -> Result<f64, String> {
-		match self.scope.get(&var.name) {
+		match self.scope_get(&var.name) {
 			Some(val) => Ok(*val),
 			None => Err(format!("Variable \"{}\" is undefined", var.name)),
 		}
@@ -91,12 +117,12 @@ impl Runner {
 
 	fn run_assignment(&mut self, assign: Assignment) -> Result<f64, String> {
 		let r = self.run_expression(*assign.right)?;
-		self.scope.insert(assign.var.name, r);
+		self.scope_set(assign.var.name, r);
 		Ok(r)
 	} // run_assignment
 
 	fn run_delete_var(&mut self, var: Variable) -> Result<(), String> {
-		if self.scope.remove(&var.name) == None {
+		if self.scope_unset(&var.name) == None {
 			Err(format!("Variable \"{}\" is undefined", var.name))
 		} else {
 			Ok(())
