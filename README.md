@@ -30,26 +30,29 @@ $ tcalc
 
 ## Syntax
 
-| Operator | Description                      |
-|----------|----------------------------------|
-| ( )      | parens                           |
-| - !      | negate, bitwise NOT              |
-| \*\*     | exponentiation                   |
-| * / %    | multiplication, division, modulo |
-| + -      | addition, subtraction            |
-| << >>    | left shift, right shift          |
-| &        | bitwise AND                      |
-| ^        | bitwise XOR                      |
-| \|       | bitwise OR                       |
-| =        | variable assignment              |
+| Operator | Description                                                  |
+|----------|--------------------------------------------------------------|
+| ( )                                  | parens                           |
+| - !                                  | negate, bitwise NOT              |
+| \*\*                                 | exponentiation                   |
+| * / %                                | multiplication, division, modulo |
+| + -                                  | addition, subtraction            |
+| << >>                                | left shift, right shift          |
+| &                                    | bitwise AND                      |
+| ^                                    | bitwise XOR                      |
+| \|                                   | bitwise OR                       |
+| =                                    | variable assignment              |
+| += -= *= /= %= **= &= \|= ^= <<= >>= | compound assignment              |
 
 | Numeric Format | Description                |
 |----------------|----------------------------|
-| 0b[0-1]        | binary literal             |
-| 0o[0-7]        | octal literal              |
-| 0x[0-9a-f]     | hexadecimal literal        |
 | [0-9]          | decimal literal            |
 | [0-9].[0-9]    | fractional decimal literal |
+| 0b[0-1]        | binary literal             |
+| 0o[0-7]        | octal literal              |
+| 0d[0-9]        | decimal literal            |
+| 0d[0-9].[0-9]  | fractional decimal literal |
+| 0x[0-9a-f]     | hexadecimal literal        |
 
 | Variable | Description                   |
 |----------|-------------------------------|
