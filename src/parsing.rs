@@ -146,24 +146,45 @@ impl<'a> Parser<'a> {
 		};
 
 		// check if the next token is an equal sign
-		let t = self.get_token();
-		match t {
-			Some(Token {
-				token_type: TokenType::Equal,
-				..
-			}) => {}
-			Some(t) => {
-				self.put_token(t);
-				return Some(Expression::Variable(var));
+		let op: Option<BinaryOp>;
+		if let Some(t) = self.get_token() {
+			match t.token_type {
+				TokenType::Equal => op = None,
+				TokenType::AmpersandEqual => op = Some(BinaryOp::BitAnd),
+				TokenType::PipeEqual => op = Some(BinaryOp::BitOr),
+				TokenType::CaretEqual => op = Some(BinaryOp::BitXor),
+				TokenType::ForwardSlashEqual => op = Some(BinaryOp::Divide),
+				TokenType::StarX2Equal => op = Some(BinaryOp::Exponent),
+				TokenType::LeftAngleBracketX2Equal => op = Some(BinaryOp::LeftShift),
+				TokenType::MinusEqual => op = Some(BinaryOp::Minus),
+				TokenType::PercentEqual => op = Some(BinaryOp::Modulo),
+				TokenType::StarEqual => op = Some(BinaryOp::Multiply),
+				TokenType::PlusEqual => op = Some(BinaryOp::Plus),
+				TokenType::RightAngleBracketX2Equal => op = Some(BinaryOp::RightShift),
+				_ => {
+					self.put_token(t);
+					return Some(Expression::Variable(var));
+				}
 			}
-			_ => return Some(Expression::Variable(var)),
-		};
+		} else {
+			return Some(Expression::Variable(var));
+		}
 
 		// parse the right-hand expression
-		let right = unwrap!(self.parse_assign(), {
+		let mut right = unwrap!(self.parse_assign(), {
 			println!("Missing right-hand side of assignment to \"{}\"", var.name);
 			return None;
 		});
+
+		if let Some(injected) = op {
+			right = Expression::Binary(Binary {
+				left: Box::new(Expression::Variable(Variable {
+					name: var.name.clone(),
+				})),
+				op: injected,
+				right: Box::new(right),
+			});
+		}
 
 		Some(Expression::Assignment(Assignment {
 			var,
@@ -331,6 +352,7 @@ impl<'a> Parser<'a> {
 					_ => 10,
 				};
 
+				// rust core does not currently support parsing non-base-10 decimal numbers
 				if radix == 10 {
 					match str.parse::<f64>() {
 						Ok(n) => Some(Expression::Literal(Literal::Number(n))),
