@@ -326,6 +326,7 @@ impl<'a> Parser<'a> {
 				let radix = match prefix.as_str() {
 					"0b" => 2,
 					"0o" => 8,
+					"0d" => 10,
 					"0x" => 16,
 					_ => 10,
 				};

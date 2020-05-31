@@ -237,6 +237,10 @@ impl<'a> Scanner<'a> {
 					prefix.push_str("0b");
 					pred = &bin;
 				}
+				Some('d') => {
+					prefix.push_str("0d");
+					pred = &fdec;
+				}
 				Some('o') => {
 					prefix.push_str("0o");
 					pred = &oct;
