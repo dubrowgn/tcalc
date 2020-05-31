@@ -54,6 +54,7 @@ $ tcalc
 | Variable | Description                   |
 |----------|-------------------------------|
 | e        | Euler's number (e)            |
+| phi      | Golden ratio (φ)              |
 | pi       | Archimedes' constant (π)      |
 | ans      | Result of previous expression |
 

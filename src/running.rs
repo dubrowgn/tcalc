@@ -11,6 +11,7 @@ impl Runner {
 		let mut sys_scope = HashMap::new();
 
 		sys_scope.insert("e".to_string(), E);
+		sys_scope.insert("phi".to_string(), 1.618_033_988_749_895_f64);
 		sys_scope.insert("pi".to_string(), PI);
 
 		Runner {
