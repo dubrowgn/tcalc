@@ -166,7 +166,7 @@ impl<'a> Parser<'a> {
 		});
 
 		Some(Expression::Assignment(Assignment {
-			var: var,
+			var,
 			right: Box::new(right),
 		}))
 	} // parse_assign
@@ -192,7 +192,7 @@ impl<'a> Parser<'a> {
 
 			expr = Expression::Binary(Binary {
 				left: Box::new(expr),
-				op: op,
+				op,
 				right: Box::new(right),
 			});
 		} // while
@@ -205,7 +205,7 @@ impl<'a> Parser<'a> {
 
 		self.parse_binary(
 			|tt| match tt {
-				&TokenType::Pipe => Some(BinaryOp::BitOr),
+				TokenType::Pipe => Some(BinaryOp::BitOr),
 				_ => None,
 			},
 			|p| p.parse_bitxor(),
@@ -217,7 +217,7 @@ impl<'a> Parser<'a> {
 
 		self.parse_binary(
 			|tt| match tt {
-				&TokenType::Caret => Some(BinaryOp::BitXor),
+				TokenType::Caret => Some(BinaryOp::BitXor),
 				_ => None,
 			},
 			|p| p.parse_bitand(),
@@ -229,7 +229,7 @@ impl<'a> Parser<'a> {
 
 		self.parse_binary(
 			|tt| match tt {
-				&TokenType::Ampersand => Some(BinaryOp::BitAnd),
+				TokenType::Ampersand => Some(BinaryOp::BitAnd),
 				_ => None,
 			},
 			|p| p.parse_shift(),
@@ -241,8 +241,8 @@ impl<'a> Parser<'a> {
 
 		self.parse_binary(
 			|tt| match tt {
-				&TokenType::LeftAngleBracketX2 => Some(BinaryOp::LeftShift),
-				&TokenType::RightAngleBracketX2 => Some(BinaryOp::RightShift),
+				TokenType::LeftAngleBracketX2 => Some(BinaryOp::LeftShift),
+				TokenType::RightAngleBracketX2 => Some(BinaryOp::RightShift),
 				_ => None,
 			},
 			|p| p.parse_add_subtract(),
@@ -254,8 +254,8 @@ impl<'a> Parser<'a> {
 
 		self.parse_binary(
 			|tt| match tt {
-				&TokenType::Plus => Some(BinaryOp::Plus),
-				&TokenType::Minus => Some(BinaryOp::Minus),
+				TokenType::Plus => Some(BinaryOp::Plus),
+				TokenType::Minus => Some(BinaryOp::Minus),
 				_ => None,
 			},
 			|p| p.parse_multiply_divide(),
@@ -267,9 +267,9 @@ impl<'a> Parser<'a> {
 
 		self.parse_binary(
 			|tt| match tt {
-				&TokenType::Star => Some(BinaryOp::Multiply),
-				&TokenType::ForwardSlash => Some(BinaryOp::Divide),
-				&TokenType::Percent => Some(BinaryOp::Modulo),
+				TokenType::Star => Some(BinaryOp::Multiply),
+				TokenType::ForwardSlash => Some(BinaryOp::Divide),
+				TokenType::Percent => Some(BinaryOp::Modulo),
 				_ => None,
 			},
 			|p| p.parse_exponent(),
@@ -281,7 +281,7 @@ impl<'a> Parser<'a> {
 
 		self.parse_binary(
 			|tt| match tt {
-				&TokenType::StarX2 => Some(BinaryOp::Exponent),
+				TokenType::StarX2 => Some(BinaryOp::Exponent),
 				_ => None,
 			},
 			|p| p.parse_unary(),
@@ -307,7 +307,7 @@ impl<'a> Parser<'a> {
 
 		match self.parse_unary() {
 			Some(right) => Some(Expression::Unary(Unary {
-				op: op,
+				op,
 				right: Box::new(right),
 			})),
 			None => None,
@@ -374,7 +374,7 @@ impl<'a> Parser<'a> {
 	} // parse_primary
 } // Parser
 
-pub fn parse<'a>(input: &'a str) -> Option<Ast> {
+pub fn parse(input: &str) -> Option<Ast> {
 	Parser::new(input).parse_ast()
 }
 
@@ -410,7 +410,7 @@ mod tests {
 		);
 		expect(
 			"0_123_456_789",
-			Ast::Expression(Expression::Literal(Literal::Number(123456789f64))),
+			Ast::Expression(Expression::Literal(Literal::Number(123_456_789f64))),
 		);
 		expect(
 			"12345.67890",

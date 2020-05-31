@@ -1,8 +1,7 @@
-use std::str::Chars;
 use crate::buffered_iterator::*;
+use std::str::Chars;
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum TokenType {
 	Ampersand,
 	Bang,
@@ -28,7 +27,7 @@ pub struct Token {
 	pub token_type: TokenType,
 	pub line: u32,
 	pub column: u32,
-	pub length: u32
+	pub length: u32,
 }
 
 pub struct Scanner<'a> {
@@ -58,18 +57,24 @@ impl<'a> Scanner<'a> {
 	}
 
 	fn expected_char(&self, expected: char, found: char) {
-		println!("Expected '{}' but found '{}' instead (line {}, column {})",
-			expected, found, self.line, self.column);
+		println!(
+			"Expected '{}' but found '{}' instead (line {}, column {})",
+			expected, found, self.line, self.column
+		);
 	}
 
 	fn unexpected_char(&self, found: char) {
-		println!("Unexpected character '{}' (line {}, column {})",
-			found, self.line, self.column);
+		println!(
+			"Unexpected character '{}' (line {}, column {})",
+			found, self.line, self.column
+		);
 	}
 
 	fn unexpected_end_of_input(&self) {
-		println!("Unexpected end of input (line {}, column {})",
-			self.line, self.column);
+		println!(
+			"Unexpected end of input (line {}, column {})",
+			self.line, self.column
+		);
 	}
 
 	fn get_char(&mut self) -> Option<char> {
@@ -93,28 +98,34 @@ impl<'a> Scanner<'a> {
 	}
 
 	fn consume_char<FPredicate>(&mut self, check_char: FPredicate) -> Option<char>
-		where FPredicate: Fn(char) -> bool
+	where
+		FPredicate: Fn(char) -> bool,
 	{
 		match self.get_char() {
 			Some(c) if check_char(c) => Some(c),
 			Some(c) => {
 				self.put_char(c);
 				None
-			},
-			None => None
+			}
+			None => None,
 		}
 	} // consume_char
 
 	fn new_token(&self, token_type: TokenType, length: u32) -> Option<Token> {
 		let t = Token {
-			token_type: token_type,
+			token_type,
 			line: self.line,
 			column: self.column - length,
-			length: length
+			length,
 		};
 
-		trace!("{:?} @{}:{}, len {}",
-			t.token_type, t.line, t.column, t.length);
+		trace!(
+			"{:?} @{}:{}, len {}",
+			t.token_type,
+			t.line,
+			t.column,
+			t.length
+		);
 
 		Some(t)
 	}
@@ -153,11 +164,11 @@ impl<'a> Scanner<'a> {
 			'_' => {
 				self.put_char(c);
 				self.scan_identifier()
-			},
+			}
 			'.' | '0'..='9' => {
 				self.put_char(c);
 				self.scan_number()
-			},
+			}
 			_ => {
 				self.put_char(c);
 				if c.is_alphabetic() {
@@ -166,7 +177,7 @@ impl<'a> Scanner<'a> {
 					self.unexpected_char(c);
 					None
 				}
-			},
+			}
 		} // match
 	} // next
 
@@ -174,7 +185,7 @@ impl<'a> Scanner<'a> {
 		match self.get_char() {
 			Some('*') => return self.new_token(TokenType::StarX2, 2),
 			Some(c) => self.put_char(c),
-			None => {},
+			None => {}
 		}
 
 		self.new_token(TokenType::Star, 1)
@@ -184,7 +195,7 @@ impl<'a> Scanner<'a> {
 		match self.expect_char() {
 			Some('<') => return self.new_token(TokenType::LeftAngleBracketX2, 2),
 			Some(c) => self.expected_char('<', c),
-			None => {},
+			None => {}
 		}
 
 		None
@@ -194,7 +205,7 @@ impl<'a> Scanner<'a> {
 		match self.expect_char() {
 			Some('>') => return self.new_token(TokenType::RightAngleBracketX2, 2),
 			Some(c) => self.expected_char('>', c),
-			None => {},
+			None => {}
 		}
 
 		None
@@ -225,19 +236,19 @@ impl<'a> Scanner<'a> {
 				Some('b') => {
 					prefix.push_str("0b");
 					pred = &bin;
-				},
+				}
 				Some('o') => {
 					prefix.push_str("0o");
 					pred = &oct;
-				},
+				}
 				Some('x') => {
 					prefix.push_str("0x");
 					pred = &hex;
-				},
+				}
 				Some(c1) => {
 					self.put_char(c1);
 					self.put_char(c0);
-				},
+				}
 				None => self.put_char(c0),
 			}
 		}
@@ -253,11 +264,8 @@ impl<'a> Scanner<'a> {
 		}
 
 		self.new_token(
-			TokenType::Number {
-				str: value,
-				prefix: prefix
-			},
-			self.column - start
+			TokenType::Number { str: value, prefix },
+			self.column - start,
 		)
 	} // scan_number
 
@@ -268,20 +276,19 @@ impl<'a> Scanner<'a> {
 
 		while let Some(c) = self.get_char() {
 			match c {
-				'_' => { },
-				_ => if !c.is_alphanumeric() {
-					self.put_char(c);
-					break;
+				'_' => {}
+				_ => {
+					if !c.is_alphanumeric() {
+						self.put_char(c);
+						break;
+					}
 				}
 			}
 
 			str.push(c);
 		}
 
-		self.new_token(
-			TokenType::Identifier{ str: str },
-			self.column - start
-		)
+		self.new_token(TokenType::Identifier { str }, self.column - start)
 	} // scan_identifier
 } // Scanner
 
@@ -328,7 +335,12 @@ mod tests {
 	#[test]
 	fn scan_identifier() {
 		let mut s = setup("ans");
-		expect(&mut s, TokenType::Identifier { str: "ans".to_string() });
+		expect(
+			&mut s,
+			TokenType::Identifier {
+				str: "ans".to_string(),
+			},
+		);
 	}
 
 	#[test]
@@ -364,12 +376,48 @@ mod tests {
 	#[test]
 	fn scan_number() {
 		let mut s = setup("0b01 0o01234567 0x0123456789abcdefABCDEF 0123456789 11_11 11.11");
-		expect(&mut s, TokenType::Number { str: "01".to_string(), prefix: "0b".to_string() });
-		expect(&mut s, TokenType::Number { str: "01234567".to_string(), prefix: "0o".to_string() });
-		expect(&mut s, TokenType::Number { str: "0123456789abcdefABCDEF".to_string(), prefix: "0x".to_string() });
-		expect(&mut s, TokenType::Number { str: "0123456789".to_string(), prefix: "".to_string() });
-		expect(&mut s, TokenType::Number { str: "1111".to_string(), prefix: "".to_string() });
-		expect(&mut s, TokenType::Number { str: "11.11".to_string(), prefix: "".to_string() });
+		expect(
+			&mut s,
+			TokenType::Number {
+				str: "01".to_string(),
+				prefix: "0b".to_string(),
+			},
+		);
+		expect(
+			&mut s,
+			TokenType::Number {
+				str: "01234567".to_string(),
+				prefix: "0o".to_string(),
+			},
+		);
+		expect(
+			&mut s,
+			TokenType::Number {
+				str: "0123456789abcdefABCDEF".to_string(),
+				prefix: "0x".to_string(),
+			},
+		);
+		expect(
+			&mut s,
+			TokenType::Number {
+				str: "0123456789".to_string(),
+				prefix: "".to_string(),
+			},
+		);
+		expect(
+			&mut s,
+			TokenType::Number {
+				str: "1111".to_string(),
+				prefix: "".to_string(),
+			},
+		);
+		expect(
+			&mut s,
+			TokenType::Number {
+				str: "11.11".to_string(),
+				prefix: "".to_string(),
+			},
+		);
 	}
 
 	#[test]
