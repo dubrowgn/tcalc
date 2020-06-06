@@ -413,91 +413,98 @@ mod tests {
 		assert_eq!(result, expected);
 	}
 
+	fn assign_expr(name: &str, right: Expression) -> Expression {
+		Expression::Assignment(Assignment {
+			var: var(name),
+			right: Box::new(right),
+		})
+	}
+
+	fn assign_ast(name: &str, right: Expression) -> Ast {
+		Ast::Expression(assign_expr(name, right))
+	}
+
+	fn bin_op_expr(left: Expression, op: BinaryOp, right: Expression) -> Expression {
+		Expression::Binary(Binary {
+			left: Box::new(left),
+			op,
+			right: Box::new(right),
+		})
+	}
+
+	fn bin_op_ast(left: Expression, op: BinaryOp, right: Expression) -> Ast {
+		Ast::Expression(bin_op_expr(left, op, right))
+	}
+
+	fn num_expr(value: f64) -> Expression {
+		Expression::Literal(Literal::Number(value))
+	}
+
+	fn num_ast(value: f64) -> Ast {
+		Ast::Expression(num_expr(value))
+	}
+
+	fn uni_op_expr(op: UnaryOp, right: Expression) -> Expression {
+		Expression::Unary(Unary {
+			op,
+			right: Box::new(right),
+		})
+	}
+
+	fn uni_op_ast(op: UnaryOp, right: Expression) -> Ast {
+		Ast::Expression(uni_op_expr(op, right))
+	}
+
+	fn var(name: &str) -> Variable {
+		Variable {
+			name: name.to_string(),
+		}
+	}
+
+	fn var_expr(name: &str) -> Expression {
+		Expression::Variable(var(name))
+	}
+
+	fn var_ast(name: &str) -> Ast {
+		Ast::Expression(var_expr(name))
+	}
+
 	#[test]
 	fn parse_literal() {
-		expect(
-			"0b11",
-			Ast::Expression(Expression::Literal(Literal::Number(3f64))),
-		);
-		expect(
-			"0o11",
-			Ast::Expression(Expression::Literal(Literal::Number(9f64))),
-		);
-		expect(
-			"0x11",
-			Ast::Expression(Expression::Literal(Literal::Number(17f64))),
-		);
-		expect(
-			"11",
-			Ast::Expression(Expression::Literal(Literal::Number(11f64))),
-		);
-		expect(
-			"0_123_456_789",
-			Ast::Expression(Expression::Literal(Literal::Number(123_456_789f64))),
-		);
-		expect(
-			"12345.67890",
-			Ast::Expression(Expression::Literal(Literal::Number(12345.6789f64))),
-		);
+		expect("0b11", num_ast(3f64));
+		expect("0o11", num_ast(9f64));
+		expect("0x11", num_ast(17f64));
+		expect("11", num_ast(11f64));
+		expect("0_123_456_789", num_ast(123_456_789f64));
+		expect("12345.67890", num_ast(12345.6789f64));
 	}
 
 	#[test]
 	fn parse_variable() {
-		expect(
-			"e",
-			Ast::Expression(Expression::Variable(Variable {
-				name: "e".to_string(),
-			})),
-		);
+		expect("e", var_ast("e"));
 	}
 
 	#[test]
 	fn parse_parens() {
-		expect(
-			"(123)",
-			Ast::Expression(Expression::Literal(Literal::Number(123f64))),
-		);
-		expect(
-			"(e)",
-			Ast::Expression(Expression::Variable(Variable {
-				name: "e".to_string(),
-			})),
-		);
+		expect("(123)", num_ast(123f64));
+		expect("(e)", var_ast("e"));
 	}
 
 	#[test]
 	fn parse_negate() {
-		expect(
-			"-123",
-			Ast::Expression(Expression::Unary(Unary {
-				op: UnaryOp::Negate,
-				right: Box::new(Expression::Literal(Literal::Number(123f64))),
-			})),
-		);
+		expect("-123", uni_op_ast(UnaryOp::Negate, num_expr(123f64)));
 	}
 
 	#[test]
 	fn parse_not() {
-		expect(
-			"!e",
-			Ast::Expression(Expression::Unary(Unary {
-				op: UnaryOp::Not,
-				right: Box::new(Expression::Variable(Variable {
-					name: "e".to_string(),
-				})),
-			})),
-		);
+		expect("!e", uni_op_ast(UnaryOp::Not, var_expr("e")));
 	}
 
 	#[test]
 	fn parse_bit_and() {
 		expect(
 			"2&7",
-			Ast::Expression(Expression::Binary(Binary {
-				left: Box::new(Expression::Literal(Literal::Number(2f64))),
-				op: BinaryOp::BitAnd,
-				right: Box::new(Expression::Literal(Literal::Number(7f64))),
-			})),
+			bin_op_ast(num_expr(2f64), BinaryOp::BitAnd, num_expr(7f64)),
 		);
 	}
 
@@ -505,11 +512,7 @@ mod tests {
 	fn parse_bit_or() {
 		expect(
 			"2|7",
-			Ast::Expression(Expression::Binary(Binary {
-				left: Box::new(Expression::Literal(Literal::Number(2f64))),
-				op: BinaryOp::BitOr,
-				right: Box::new(Expression::Literal(Literal::Number(7f64))),
-			})),
+			bin_op_ast(num_expr(2f64), BinaryOp::BitOr, num_expr(7f64)),
 		);
 	}
 
@@ -517,11 +520,7 @@ mod tests {
 	fn parse_bit_xor() {
 		expect(
 			"2^7",
-			Ast::Expression(Expression::Binary(Binary {
-				left: Box::new(Expression::Literal(Literal::Number(2f64))),
-				op: BinaryOp::BitXor,
-				right: Box::new(Expression::Literal(Literal::Number(7f64))),
-			})),
+			bin_op_ast(num_expr(2f64), BinaryOp::BitXor, num_expr(7f64)),
 		);
 	}
 
@@ -529,11 +528,7 @@ mod tests {
 	fn parse_divide() {
 		expect(
 			"2/7",
-			Ast::Expression(Expression::Binary(Binary {
-				left: Box::new(Expression::Literal(Literal::Number(2f64))),
-				op: BinaryOp::Divide,
-				right: Box::new(Expression::Literal(Literal::Number(7f64))),
-			})),
+			bin_op_ast(num_expr(2f64), BinaryOp::Divide, num_expr(7f64)),
 		);
 	}
 
@@ -541,11 +536,7 @@ mod tests {
 	fn parse_exponent() {
 		expect(
 			"2**7",
-			Ast::Expression(Expression::Binary(Binary {
-				left: Box::new(Expression::Literal(Literal::Number(2f64))),
-				op: BinaryOp::Exponent,
-				right: Box::new(Expression::Literal(Literal::Number(7f64))),
-			})),
+			bin_op_ast(num_expr(2f64), BinaryOp::Exponent, num_expr(7f64)),
 		);
 	}
 
@@ -553,11 +544,7 @@ mod tests {
 	fn parse_left_shift() {
 		expect(
 			"2<<7",
-			Ast::Expression(Expression::Binary(Binary {
-				left: Box::new(Expression::Literal(Literal::Number(2f64))),
-				op: BinaryOp::LeftShift,
-				right: Box::new(Expression::Literal(Literal::Number(7f64))),
-			})),
+			bin_op_ast(num_expr(2f64), BinaryOp::LeftShift, num_expr(7f64)),
 		);
 	}
 
@@ -565,11 +552,7 @@ mod tests {
 	fn parse_minus() {
 		expect(
 			"2-7",
-			Ast::Expression(Expression::Binary(Binary {
-				left: Box::new(Expression::Literal(Literal::Number(2f64))),
-				op: BinaryOp::Minus,
-				right: Box::new(Expression::Literal(Literal::Number(7f64))),
-			})),
+			bin_op_ast(num_expr(2f64), BinaryOp::Minus, num_expr(7f64)),
 		);
 	}
 
@@ -577,11 +560,7 @@ mod tests {
 	fn parse_modulo() {
 		expect(
 			"2%7",
-			Ast::Expression(Expression::Binary(Binary {
-				left: Box::new(Expression::Literal(Literal::Number(2f64))),
-				op: BinaryOp::Modulo,
-				right: Box::new(Expression::Literal(Literal::Number(7f64))),
-			})),
+			bin_op_ast(num_expr(2f64), BinaryOp::Modulo, num_expr(7f64)),
 		);
 	}
 
@@ -589,11 +568,7 @@ mod tests {
 	fn parse_multiply() {
 		expect(
 			"2*7",
-			Ast::Expression(Expression::Binary(Binary {
-				left: Box::new(Expression::Literal(Literal::Number(2f64))),
-				op: BinaryOp::Multiply,
-				right: Box::new(Expression::Literal(Literal::Number(7f64))),
-			})),
+			bin_op_ast(num_expr(2f64), BinaryOp::Multiply, num_expr(7f64)),
 		);
 	}
 
@@ -601,11 +576,7 @@ mod tests {
 	fn parse_plus() {
 		expect(
 			"2+7",
-			Ast::Expression(Expression::Binary(Binary {
-				left: Box::new(Expression::Literal(Literal::Number(2f64))),
-				op: BinaryOp::Plus,
-				right: Box::new(Expression::Literal(Literal::Number(7f64))),
-			})),
+			bin_op_ast(num_expr(2f64), BinaryOp::Plus, num_expr(7f64)),
 		);
 	}
 
@@ -613,25 +584,13 @@ mod tests {
 	fn parse_right_shift() {
 		expect(
 			"2>>7",
-			Ast::Expression(Expression::Binary(Binary {
-				left: Box::new(Expression::Literal(Literal::Number(2f64))),
-				op: BinaryOp::RightShift,
-				right: Box::new(Expression::Literal(Literal::Number(7f64))),
-			})),
+			bin_op_ast(num_expr(2f64), BinaryOp::RightShift, num_expr(7f64)),
 		);
 	}
 
 	#[test]
 	fn parse_assignment() {
-		expect(
-			"a=8",
-			Ast::Expression(Expression::Assignment(Assignment {
-				var: Variable {
-					name: "a".to_string(),
-				},
-				right: Box::new(Expression::Literal(Literal::Number(8f64))),
-			})),
-		);
+		expect("a=8", assign_ast("a", num_expr(8f64)));
 	}
 
 	#[test]
@@ -644,54 +603,38 @@ mod tests {
 	fn parse_pemdas() {
 		expect(
 			"6/3-2",
-			Ast::Expression(Expression::Binary(Binary {
-				left: Box::new(Expression::Binary(Binary {
-					left: Box::new(Expression::Literal(Literal::Number(6f64))),
-					op: BinaryOp::Divide,
-					right: Box::new(Expression::Literal(Literal::Number(3f64))),
-				})),
-				op: BinaryOp::Minus,
-				right: Box::new(Expression::Literal(Literal::Number(2f64))),
-			})),
+			bin_op_ast(
+				bin_op_expr(num_expr(6f64), BinaryOp::Divide, num_expr(3f64)),
+				BinaryOp::Minus,
+				num_expr(2f64),
+			),
 		);
 
 		expect(
 			"6/(3-2)",
-			Ast::Expression(Expression::Binary(Binary {
-				left: Box::new(Expression::Literal(Literal::Number(6f64))),
-				op: BinaryOp::Divide,
-				right: Box::new(Expression::Binary(Binary {
-					left: Box::new(Expression::Literal(Literal::Number(3f64))),
-					op: BinaryOp::Minus,
-					right: Box::new(Expression::Literal(Literal::Number(2f64))),
-				})),
-			})),
+			bin_op_ast(
+				num_expr(6f64),
+				BinaryOp::Divide,
+				bin_op_expr(num_expr(3f64), BinaryOp::Minus, num_expr(2f64)),
+			),
 		);
 
 		expect(
 			"6*3**2",
-			Ast::Expression(Expression::Binary(Binary {
-				left: Box::new(Expression::Literal(Literal::Number(6f64))),
-				op: BinaryOp::Multiply,
-				right: Box::new(Expression::Binary(Binary {
-					left: Box::new(Expression::Literal(Literal::Number(3f64))),
-					op: BinaryOp::Exponent,
-					right: Box::new(Expression::Literal(Literal::Number(2f64))),
-				})),
-			})),
+			bin_op_ast(
+				num_expr(6f64),
+				BinaryOp::Multiply,
+				bin_op_expr(num_expr(3f64), BinaryOp::Exponent, num_expr(2f64)),
+			),
 		);
 
 		expect(
 			"(6*3)**2",
-			Ast::Expression(Expression::Binary(Binary {
-				left: Box::new(Expression::Binary(Binary {
-					left: Box::new(Expression::Literal(Literal::Number(6f64))),
-					op: BinaryOp::Multiply,
-					right: Box::new(Expression::Literal(Literal::Number(3f64))),
-				})),
-				op: BinaryOp::Exponent,
-				right: Box::new(Expression::Literal(Literal::Number(2f64))),
-			})),
+			bin_op_ast(
+				bin_op_expr(num_expr(6f64), BinaryOp::Multiply, num_expr(3f64)),
+				BinaryOp::Exponent,
+				num_expr(2f64),
+			),
 		);
 	}
 
