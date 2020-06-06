@@ -404,33 +404,28 @@ mod tests {
 
 	#[test]
 	fn scan_ampersand() {
-		let mut s = setup("&");
-		expect(&mut s, TokenType::Ampersand);
+		expect(&mut setup("&"), TokenType::Ampersand);
 	}
 
 	#[test]
 	fn scan_bang() {
-		let mut s = setup("!");
-		expect(&mut s, TokenType::Bang);
+		expect(&mut setup("!"), TokenType::Bang);
 	}
 
 	#[test]
 	fn scan_caret() {
-		let mut s = setup("^");
-		expect(&mut s, TokenType::Caret);
+		expect(&mut setup("^"), TokenType::Caret);
 	}
 
 	#[test]
 	fn scan_forward_slash() {
-		let mut s = setup("/");
-		expect(&mut s, TokenType::ForwardSlash);
+		expect(&mut setup("/"), TokenType::ForwardSlash);
 	}
 
 	#[test]
 	fn scan_identifier() {
-		let mut s = setup("ans");
 		expect(
-			&mut s,
+			&mut setup("ans"),
 			TokenType::Identifier {
 				str: "ans".to_string(),
 			},
@@ -439,14 +434,12 @@ mod tests {
 
 	#[test]
 	fn scan_left_angle_bracket_x2() {
-		let mut s = setup("<<");
-		expect(&mut s, TokenType::LeftAngleBracketX2);
+		expect(&mut setup("<<"), TokenType::LeftAngleBracketX2);
 	}
 
 	#[test]
 	fn scan_left_paren() {
-		let mut s = setup("(");
-		expect(&mut s, TokenType::LeftParen);
+		expect(&mut setup("("), TokenType::LeftParen);
 	}
 
 	#[test]
@@ -457,14 +450,12 @@ mod tests {
 
 	#[test]
 	fn scan_equal() {
-		let mut s = setup("=");
-		expect(&mut s, TokenType::Equal);
+		expect(&mut setup("="), TokenType::Equal);
 	}
 
 	#[test]
 	fn scan_new_line() {
-		let mut s = setup("\n");
-		expect(&mut s, TokenType::NewLine);
+		expect(&mut setup("\n"), TokenType::NewLine);
 	}
 
 	#[test]
@@ -516,43 +507,36 @@ mod tests {
 
 	#[test]
 	fn scan_percent() {
-		let mut s = setup("%");
-		expect(&mut s, TokenType::Percent);
+		expect(&mut setup("%"), TokenType::Percent);
 	}
 
 	#[test]
 	fn scan_pipe() {
-		let mut s = setup("|");
-		expect(&mut s, TokenType::Pipe);
+		expect(&mut setup("|"), TokenType::Pipe);
 	}
 
 	#[test]
 	fn scan_plus() {
-		let mut s = setup("+");
-		expect(&mut s, TokenType::Plus);
+		expect(&mut setup("+"), TokenType::Plus);
 	}
 
 	#[test]
 	fn scan_right_angle_bracket_x2() {
-		let mut s = setup(">>");
-		expect(&mut s, TokenType::RightAngleBracketX2);
+		expect(&mut setup(">>"), TokenType::RightAngleBracketX2);
 	}
 
 	#[test]
 	fn scan_right_paren() {
-		let mut s = setup(")");
-		expect(&mut s, TokenType::RightParen);
+		expect(&mut setup(")"), TokenType::RightParen);
 	}
 
 	#[test]
 	fn scan_star() {
-		let mut s = setup("*");
-		expect(&mut s, TokenType::Star);
+		expect(&mut setup("*"), TokenType::Star);
 	}
 
 	#[test]
 	fn scan_star_x2() {
-		let mut s = setup("**");
-		expect(&mut s, TokenType::StarX2);
+		expect(&mut setup("**"), TokenType::StarX2);
 	}
-} // mod tests
+}
