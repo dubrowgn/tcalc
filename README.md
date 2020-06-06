@@ -38,6 +38,7 @@ $ tcalc
 | \*\*                                 | exponentiation                   |
 | * / %                                | multiplication, division, modulo |
 | + -                                  | addition, subtraction            |
+| ++ --                                | increment, decrement (suffix)    |
 | << >>                                | left shift, right shift          |
 | &                                    | bitwise AND                      |
 | ^                                    | bitwise XOR                      |

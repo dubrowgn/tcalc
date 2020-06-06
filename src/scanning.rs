@@ -17,6 +17,7 @@ pub enum TokenType {
 	LeftParen,
 	Minus,
 	MinusEqual,
+	MinusX2,
 	NewLine,
 	Number { str: String, prefix: String },
 	Percent,
@@ -25,6 +26,7 @@ pub enum TokenType {
 	PipeEqual,
 	Plus,
 	PlusEqual,
+	PlusX2,
 	RightAngleBracketX2,
 	RightAngleBracketX2Equal,
 	RightParen,
@@ -208,7 +210,9 @@ impl<'a> Scanner<'a> {
 	}
 
 	fn scan_plus(&mut self) -> Option<Token> {
-		if self.consume_char('=') {
+		if self.consume_char('+') {
+			self.new_token(TokenType::PlusX2, 2)
+		} else if self.consume_char('=') {
 			self.new_token(TokenType::PlusEqual, 2)
 		} else {
 			self.new_token(TokenType::Plus, 1)
@@ -216,7 +220,9 @@ impl<'a> Scanner<'a> {
 	}
 
 	fn scan_minus(&mut self) -> Option<Token> {
-		if self.consume_char('=') {
+		if self.consume_char('-') {
+			self.new_token(TokenType::MinusX2, 2)
+		} else if self.consume_char('=') {
 			self.new_token(TokenType::MinusEqual, 2)
 		} else {
 			self.new_token(TokenType::Minus, 1)
@@ -473,6 +479,11 @@ mod tests {
 	}
 
 	#[test]
+	fn scan_minus_x2() {
+		expect(&mut setup("--"), TokenType::MinusX2);
+	}
+
+	#[test]
 	fn scan_minus_equal() {
 		expect(&mut setup("-="), TokenType::MinusEqual);
 	}
@@ -552,6 +563,11 @@ mod tests {
 	#[test]
 	fn scan_plus() {
 		expect(&mut setup("+"), TokenType::Plus);
+	}
+
+	#[test]
+	fn scan_plus_x2() {
+		expect(&mut setup("++"), TokenType::PlusX2);
 	}
 
 	#[test]

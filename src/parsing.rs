@@ -146,21 +146,30 @@ impl<'a> Parser<'a> {
 		};
 
 		// check if the next token is an equal sign
-		let op: Option<BinaryOp>;
+		let op_opt: Option<BinaryOp>;
+		let mut right_opt: Option<Expression> = None;
 		if let Some(t) = self.get_token() {
 			match t.token_type {
-				TokenType::Equal => op = None,
-				TokenType::AmpersandEqual => op = Some(BinaryOp::BitAnd),
-				TokenType::PipeEqual => op = Some(BinaryOp::BitOr),
-				TokenType::CaretEqual => op = Some(BinaryOp::BitXor),
-				TokenType::ForwardSlashEqual => op = Some(BinaryOp::Divide),
-				TokenType::StarX2Equal => op = Some(BinaryOp::Exponent),
-				TokenType::LeftAngleBracketX2Equal => op = Some(BinaryOp::LeftShift),
-				TokenType::MinusEqual => op = Some(BinaryOp::Minus),
-				TokenType::PercentEqual => op = Some(BinaryOp::Modulo),
-				TokenType::StarEqual => op = Some(BinaryOp::Multiply),
-				TokenType::PlusEqual => op = Some(BinaryOp::Plus),
-				TokenType::RightAngleBracketX2Equal => op = Some(BinaryOp::RightShift),
+				TokenType::AmpersandEqual => op_opt = Some(BinaryOp::BitAnd),
+				TokenType::CaretEqual => op_opt = Some(BinaryOp::BitXor),
+				TokenType::Equal => op_opt = None,
+				TokenType::ForwardSlashEqual => op_opt = Some(BinaryOp::Divide),
+				TokenType::LeftAngleBracketX2Equal => op_opt = Some(BinaryOp::LeftShift),
+				TokenType::MinusEqual => op_opt = Some(BinaryOp::Minus),
+				TokenType::MinusX2 => {
+					op_opt = Some(BinaryOp::Minus);
+					right_opt = Some(Expression::Literal(Literal::Number(1f64)));
+				}
+				TokenType::PercentEqual => op_opt = Some(BinaryOp::Modulo),
+				TokenType::PipeEqual => op_opt = Some(BinaryOp::BitOr),
+				TokenType::PlusEqual => op_opt = Some(BinaryOp::Plus),
+				TokenType::PlusX2 => {
+					op_opt = Some(BinaryOp::Plus);
+					right_opt = Some(Expression::Literal(Literal::Number(1f64)));
+				}
+				TokenType::RightAngleBracketX2Equal => op_opt = Some(BinaryOp::RightShift),
+				TokenType::StarEqual => op_opt = Some(BinaryOp::Multiply),
+				TokenType::StarX2Equal => op_opt = Some(BinaryOp::Exponent),
 				_ => {
 					self.put_token(t);
 					return Some(Expression::Variable(var));
@@ -170,18 +179,22 @@ impl<'a> Parser<'a> {
 			return Some(Expression::Variable(var));
 		}
 
+		if right_opt.is_none() {
+			right_opt = self.parse_assign();
+		}
+
 		// parse the right-hand expression
-		let mut right = unwrap!(self.parse_assign(), {
+		let mut right = unwrap!(right_opt, {
 			println!("Missing right-hand side of assignment to \"{}\"", var.name);
 			return None;
 		});
 
-		if let Some(injected) = op {
+		if let Some(op) = op_opt {
 			right = Expression::Binary(Binary {
 				left: Box::new(Expression::Variable(Variable {
 					name: var.name.clone(),
 				})),
-				op: injected,
+				op,
 				right: Box::new(right),
 			});
 		}
@@ -549,6 +562,11 @@ mod tests {
 	}
 
 	#[test]
+	fn parse_decrement() {
+		expect("a--", comp_assign_ast("a", BinaryOp::Minus, num_expr(1f64)))
+	}
+
+	#[test]
 	fn parse_divide() {
 		parse_bin_op("/", BinaryOp::Divide);
 	}
@@ -566,6 +584,11 @@ mod tests {
 	#[test]
 	fn parse_exponent_assign() {
 		parse_comp_assign("**=", BinaryOp::Exponent);
+	}
+
+	#[test]
+	fn parse_increment() {
+		expect("a++", comp_assign_ast("a", BinaryOp::Plus, num_expr(1f64)))
 	}
 
 	#[test]
