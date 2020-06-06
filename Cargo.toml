@@ -1,12 +1,13 @@
 [package]
-name = "tcalc"
-description = "A featureful calculator for when you want to do math in a terminal."
-version = "1.7.15"
 authors = ["dubrowgn"]
-license = "MIT"
-repository = "https://github.com/dubrowgn/tcalc.git"
+description = "A featureful calculator for when you want to do math in a terminal."
 documentation = "https://github.com/dubrowgn/tcalc"
 edition = "2018"
+license = "MIT"
+name = "tcalc"
+readme="README.md"
+repository = "https://github.com/dubrowgn/tcalc.git"
+version = "1.7.15"
 
 include = [
 	"Cargo.toml",
