@@ -408,6 +408,11 @@ mod tests {
 	}
 
 	#[test]
+	fn scan_ampersand_equal() {
+		expect(&mut setup("&="), TokenType::AmpersandEqual);
+	}
+
+	#[test]
 	fn scan_bang() {
 		expect(&mut setup("!"), TokenType::Bang);
 	}
@@ -418,8 +423,23 @@ mod tests {
 	}
 
 	#[test]
+	fn scan_caret_equal() {
+		expect(&mut setup("^="), TokenType::CaretEqual);
+	}
+
+	#[test]
+	fn scan_equal() {
+		expect(&mut setup("="), TokenType::Equal);
+	}
+
+	#[test]
 	fn scan_forward_slash() {
 		expect(&mut setup("/"), TokenType::ForwardSlash);
+	}
+
+	#[test]
+	fn scan_forward_slash_equal() {
+		expect(&mut setup("/="), TokenType::ForwardSlashEqual);
 	}
 
 	#[test]
@@ -438,19 +458,23 @@ mod tests {
 	}
 
 	#[test]
+	fn scan_left_angle_bracket_x2_equal() {
+		expect(&mut setup("<<="), TokenType::LeftAngleBracketX2Equal);
+	}
+
+	#[test]
 	fn scan_left_paren() {
 		expect(&mut setup("("), TokenType::LeftParen);
 	}
 
 	#[test]
 	fn scan_minus() {
-		let mut s = setup("-");
-		expect(&mut s, TokenType::Minus);
+		expect(&mut setup("-"), TokenType::Minus);
 	}
 
 	#[test]
-	fn scan_equal() {
-		expect(&mut setup("="), TokenType::Equal);
+	fn scan_minus_equal() {
+		expect(&mut setup("-="), TokenType::MinusEqual);
 	}
 
 	#[test]
@@ -511,8 +535,18 @@ mod tests {
 	}
 
 	#[test]
+	fn scan_percent_equal() {
+		expect(&mut setup("%="), TokenType::PercentEqual);
+	}
+
+	#[test]
 	fn scan_pipe() {
 		expect(&mut setup("|"), TokenType::Pipe);
+	}
+
+	#[test]
+	fn scan_pipe_equal() {
+		expect(&mut setup("|="), TokenType::PipeEqual);
 	}
 
 	#[test]
@@ -521,8 +555,18 @@ mod tests {
 	}
 
 	#[test]
+	fn scan_plus_equal() {
+		expect(&mut setup("+="), TokenType::PlusEqual);
+	}
+
+	#[test]
 	fn scan_right_angle_bracket_x2() {
 		expect(&mut setup(">>"), TokenType::RightAngleBracketX2);
+	}
+
+	#[test]
+	fn scan_right_angle_bracket_x2_equal() {
+		expect(&mut setup(">>="), TokenType::RightAngleBracketX2Equal);
 	}
 
 	#[test]
@@ -536,7 +580,17 @@ mod tests {
 	}
 
 	#[test]
+	fn scan_star_equal() {
+		expect(&mut setup("*="), TokenType::StarEqual);
+	}
+
+	#[test]
 	fn scan_star_x2() {
 		expect(&mut setup("**"), TokenType::StarX2);
+	}
+
+	#[test]
+	fn scan_star_x2_equal() {
+		expect(&mut setup("**="), TokenType::StarX2Equal);
 	}
 }
