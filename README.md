@@ -2,6 +2,7 @@
 A featureful calculator for when you want to do math in a terminal.
 
 [![Build Status](https://travis-ci.org/dubrowgn/tcalc.svg?branch=master)](https://travis-ci.org/dubrowgn/tcalc)
+[![crates.io](https://img.shields.io/crates/v/tcalc)](https://crates.io/crates/tcalc)
 
 ## Usage
 tcalc supports two modes of usage: terminal and REPL.
