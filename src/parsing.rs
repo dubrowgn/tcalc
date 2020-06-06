@@ -436,6 +436,10 @@ mod tests {
 		Ast::Expression(bin_op_expr(left, op, right))
 	}
 
+	fn comp_assign_ast(name: &str, op: BinaryOp, right: Expression) -> Ast {
+		assign_ast(name, bin_op_expr(var_expr(name), op, right))
+	}
+
 	fn num_expr(value: f64) -> Expression {
 		Expression::Literal(Literal::Number(value))
 	}
@@ -500,92 +504,128 @@ mod tests {
 		expect("!e", uni_op_ast(UnaryOp::Not, var_expr("e")));
 	}
 
+	fn parse_bin_op(str_op: &str, op: BinaryOp) {
+		expect(
+			&format!("2 {} 7", str_op),
+			bin_op_ast(num_expr(2f64), op, num_expr(7f64)),
+		);
+	}
+
+	fn parse_comp_assign(str_op: &str, op: BinaryOp) {
+		expect(
+			&format!("a {} 7", str_op),
+			comp_assign_ast("a", op, num_expr(7f64)),
+		);
+	}
+
 	#[test]
 	fn parse_bit_and() {
-		expect(
-			"2&7",
-			bin_op_ast(num_expr(2f64), BinaryOp::BitAnd, num_expr(7f64)),
-		);
+		parse_bin_op("&", BinaryOp::BitAnd);
+	}
+
+	#[test]
+	fn parse_bit_and_assign() {
+		parse_comp_assign("&=", BinaryOp::BitAnd);
 	}
 
 	#[test]
 	fn parse_bit_or() {
-		expect(
-			"2|7",
-			bin_op_ast(num_expr(2f64), BinaryOp::BitOr, num_expr(7f64)),
-		);
+		parse_bin_op("|", BinaryOp::BitOr);
+	}
+
+	#[test]
+	fn parse_bit_or_assign() {
+		parse_comp_assign("|=", BinaryOp::BitOr);
 	}
 
 	#[test]
 	fn parse_bit_xor() {
-		expect(
-			"2^7",
-			bin_op_ast(num_expr(2f64), BinaryOp::BitXor, num_expr(7f64)),
-		);
+		parse_bin_op("^", BinaryOp::BitXor);
+	}
+
+	#[test]
+	fn parse_bit_xor_assign() {
+		parse_comp_assign("^=", BinaryOp::BitXor);
 	}
 
 	#[test]
 	fn parse_divide() {
-		expect(
-			"2/7",
-			bin_op_ast(num_expr(2f64), BinaryOp::Divide, num_expr(7f64)),
-		);
+		parse_bin_op("/", BinaryOp::Divide);
+	}
+
+	#[test]
+	fn parse_divide_assign() {
+		parse_comp_assign("/=", BinaryOp::Divide);
 	}
 
 	#[test]
 	fn parse_exponent() {
-		expect(
-			"2**7",
-			bin_op_ast(num_expr(2f64), BinaryOp::Exponent, num_expr(7f64)),
-		);
+		parse_bin_op("**", BinaryOp::Exponent);
+	}
+
+	#[test]
+	fn parse_exponent_assign() {
+		parse_comp_assign("**=", BinaryOp::Exponent);
 	}
 
 	#[test]
 	fn parse_left_shift() {
-		expect(
-			"2<<7",
-			bin_op_ast(num_expr(2f64), BinaryOp::LeftShift, num_expr(7f64)),
-		);
+		parse_bin_op("<<", BinaryOp::LeftShift);
+	}
+
+	#[test]
+	fn parse_left_shift_assign() {
+		parse_comp_assign("<<=", BinaryOp::LeftShift);
 	}
 
 	#[test]
 	fn parse_minus() {
-		expect(
-			"2-7",
-			bin_op_ast(num_expr(2f64), BinaryOp::Minus, num_expr(7f64)),
-		);
+		parse_bin_op("-", BinaryOp::Minus);
+	}
+
+	#[test]
+	fn parse_minus_assign() {
+		parse_comp_assign("-=", BinaryOp::Minus);
 	}
 
 	#[test]
 	fn parse_modulo() {
-		expect(
-			"2%7",
-			bin_op_ast(num_expr(2f64), BinaryOp::Modulo, num_expr(7f64)),
-		);
+		parse_bin_op("%", BinaryOp::Modulo);
+	}
+
+	#[test]
+	fn parse_modulo_assign() {
+		parse_comp_assign("%=", BinaryOp::Modulo);
 	}
 
 	#[test]
 	fn parse_multiply() {
-		expect(
-			"2*7",
-			bin_op_ast(num_expr(2f64), BinaryOp::Multiply, num_expr(7f64)),
-		);
+		parse_bin_op("*", BinaryOp::Multiply);
+	}
+
+	#[test]
+	fn parse_multiply_assign() {
+		parse_comp_assign("*=", BinaryOp::Multiply);
 	}
 
 	#[test]
 	fn parse_plus() {
-		expect(
-			"2+7",
-			bin_op_ast(num_expr(2f64), BinaryOp::Plus, num_expr(7f64)),
-		);
+		parse_bin_op("+", BinaryOp::Plus);
+	}
+
+	#[test]
+	fn parse_plus_assign() {
+		parse_comp_assign("+=", BinaryOp::Plus);
 	}
 
 	#[test]
 	fn parse_right_shift() {
-		expect(
-			"2>>7",
-			bin_op_ast(num_expr(2f64), BinaryOp::RightShift, num_expr(7f64)),
-		);
+		parse_bin_op(">>", BinaryOp::RightShift);
+	}
+
+	#[test]
+	fn parse_right_shift_assign() {
+		parse_comp_assign(">>=", BinaryOp::RightShift);
 	}
 
 	#[test]
