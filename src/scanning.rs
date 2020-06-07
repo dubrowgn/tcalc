@@ -8,7 +8,9 @@ pub enum TokenType {
 	Bang,
 	Caret,
 	CaretEqual,
+	Comma,
 	Equal,
+	EqualRightAngleBracket,
 	ForwardSlash,
 	ForwardSlashEqual,
 	Identifier { str: String },
@@ -163,9 +165,7 @@ impl<'a> Scanner<'a> {
 
 		// find the next non-whitespace character
 		loop {
-			c = unwrap!(self.get_char(), {
-				return None;
-			});
+			c = self.get_char()?;
 
 			// keep new lines, even though they are "whitespace"
 			if c == '\n' || !c.is_whitespace() {
@@ -187,8 +187,9 @@ impl<'a> Scanner<'a> {
 			'&' => self.scan_ampersand(),
 			'<' => self.scan_left_angle_bracket(),
 			'>' => self.scan_right_angle_bracket(),
-			'=' => self.new_token(TokenType::Equal, 1),
+			'=' => self.scan_equal(),
 			'\n' => self.scan_new_line(),
+			',' => self.new_token(TokenType::Comma, 1),
 			'_' => {
 				self.put_char(c);
 				self.scan_identifier()
@@ -304,6 +305,14 @@ impl<'a> Scanner<'a> {
 			}
 		} else {
 			None
+		}
+	}
+
+	fn scan_equal(&mut self) -> Option<Token> {
+		if self.consume_char('>') {
+			self.new_token(TokenType::EqualRightAngleBracket, 2)
+		} else {
+			self.new_token(TokenType::Equal, 1)
 		}
 	}
 
@@ -434,8 +443,18 @@ mod tests {
 	}
 
 	#[test]
+	fn scan_comma() {
+		expect(&mut setup(","), TokenType::Comma);
+	}
+
+	#[test]
 	fn scan_equal() {
 		expect(&mut setup("="), TokenType::Equal);
+	}
+
+	#[test]
+	fn scan_equal_right_angle_bracket() {
+		expect(&mut setup("=>"), TokenType::EqualRightAngleBracket);
 	}
 
 	#[test]

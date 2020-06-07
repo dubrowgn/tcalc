@@ -51,11 +51,11 @@ where
 
 	for str in inputs {
 		match parsing::parse(&str) {
-			Some(Ast::Expression(expr)) => match runner.run_expression(expr) {
+			Some(Ast::Expression(expr)) => match runner.run_expression(&expr) {
 				Ok(v) => println!("{}", v),
 				Err(msg) => println!("{}", msg),
 			},
-			Some(Ast::Statement(stmt)) => match runner.run_statement(stmt) {
+			Some(Ast::Statement(stmt)) => match runner.run_statement(&stmt) {
 				Ok(_) => {}
 				Err(msg) => println!("{}", msg),
 			},
@@ -86,11 +86,11 @@ fn repl() {
 				rl.add_history_entry(line.as_str());
 				match parsing::parse(&line) {
 					Some(Ast::Command(Command::Exit)) => break,
-					Some(Ast::Expression(expr)) => match runner.run_expression(expr) {
+					Some(Ast::Expression(expr)) => match runner.run_expression(&expr) {
 						Ok(v) => println!("  {}", v),
 						Err(msg) => println!("{}", msg),
 					},
-					Some(Ast::Statement(stmt)) => match runner.run_statement(stmt) {
+					Some(Ast::Statement(stmt)) => match runner.run_statement(&stmt) {
 						Ok(_) => {}
 						Err(msg) => println!("{}", msg),
 					},

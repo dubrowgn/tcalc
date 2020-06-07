@@ -14,11 +14,33 @@ impl<'a> Parser<'a> {
 		Parser { scanner: buf }
 	}
 
+	fn expected_token(&self, expected: TokenType, found: &Token) {
+		println!(
+			"Expected '{:?}' but found '{:?}' instead (line {}, column {})",
+			expected, found.token_type, found.line, found.column
+		);
+	}
+
 	fn unexpected_token(&self, found: &Token) {
 		println!(
-			"Unexpected token '{:?}' (line {}, col {})",
+			"Unexpected token '{:?}' (line {}, column {})",
 			found.token_type, found.line, found.column
 		);
+	}
+
+	fn unexpected_end_of_input(&self) {
+		println!("Unexpected end of input");
+	}
+
+	fn consume_token(&mut self, ttype: TokenType) -> bool {
+		match self.get_token() {
+			Some(t) if t.token_type == ttype => true,
+			Some(t) => {
+				self.put_token(t);
+				false
+			}
+			None => false,
+		}
 	}
 
 	fn get_token(&mut self) -> Option<Token> {
@@ -29,11 +51,25 @@ impl<'a> Parser<'a> {
 		self.scanner.push(t)
 	}
 
-	fn expect_token(&mut self) -> Option<Token> {
+	fn expect_token(&mut self, ttype: TokenType) -> bool {
+		match self.get_token() {
+			Some(t) if t.token_type == ttype => true,
+			Some(t) => {
+				self.expected_token(ttype, &t);
+				false
+			}
+			None => {
+				self.unexpected_end_of_input();
+				false
+			}
+		}
+	}
+
+	fn expect_any_token(&mut self) -> Option<Token> {
 		match self.get_token() {
 			Some(t) => Some(t),
 			None => {
-				println!("Unexpected end of input");
+				self.unexpected_end_of_input();
 				None
 			}
 		}
@@ -78,9 +114,7 @@ impl<'a> Parser<'a> {
 	fn parse_command(&mut self) -> Option<Command> {
 		trace!("parse_command");
 
-		let t = unwrap!(self.get_token(), {
-			return None;
-		});
+		let t = self.get_token()?;
 
 		if let Token {
 			token_type: TokenType::Identifier { ref str, .. },
@@ -101,9 +135,7 @@ impl<'a> Parser<'a> {
 	fn parse_statement(&mut self) -> Option<Statement> {
 		trace!("parse_statement");
 
-		let t = unwrap!(self.get_token(), {
-			return None;
-		});
+		let t = self.get_token()?;
 
 		if let Token {
 			token_type: TokenType::Identifier { ref str, .. },
@@ -111,9 +143,7 @@ impl<'a> Parser<'a> {
 		} = t
 		{
 			if let "delete" = str.as_str() {
-				let tvar = unwrap!(self.expect_token(), {
-					return None;
-				});
+				let tvar = self.expect_any_token()?;
 				if let TokenType::Identifier { str } = tvar.token_type {
 					return Some(Statement::DeleteVar(Variable { name: str }));
 				}
@@ -205,14 +235,40 @@ impl<'a> Parser<'a> {
 		}))
 	} // parse_assign
 
+	fn parse_call(&mut self, name: String) -> Option<Expression> {
+		trace!("parse_call");
+
+		if !self.consume_token(TokenType::LeftParen) {
+			return None;
+		}
+
+		let mut exprs: Vec<Expression> = vec![];
+		loop {
+			if let Some(expr) = self.parse_expression() {
+				exprs.push(expr);
+			}
+
+			if !self.consume_token(TokenType::Comma) {
+				break;
+			}
+		}
+
+		if !self.expect_token(TokenType::RightParen) {
+			return None;
+		}
+
+		Some(Expression::Call(Call {
+			name,
+			params: exprs,
+		}))
+	}
+
 	fn parse_binary<FOp, FNext>(&mut self, map_op: FOp, parse_next: FNext) -> Option<Expression>
 	where
 		FOp: Fn(&TokenType) -> Option<BinaryOp>,
 		FNext: Fn(&mut Parser<'_>) -> Option<Expression>,
 	{
-		let mut expr = unwrap!(parse_next(self), {
-			return None;
-		});
+		let mut expr = parse_next(self)?;
 
 		while let Some(t) = self.get_token() {
 			let op = unwrap!(map_op(&t.token_type), {
@@ -325,9 +381,7 @@ impl<'a> Parser<'a> {
 	fn parse_unary(&mut self) -> Option<Expression> {
 		trace!("parse_unary");
 
-		let t = unwrap!(self.expect_token(), {
-			return None;
-		});
+		let t = self.expect_any_token()?;
 
 		let op;
 		match t.token_type {
@@ -351,9 +405,7 @@ impl<'a> Parser<'a> {
 	fn parse_primary(&mut self) -> Option<Expression> {
 		trace!("parse_primary");
 
-		let t = unwrap!(self.expect_token(), {
-			return None;
-		});
+		let t = self.expect_any_token()?;
 
 		match t.token_type {
 			TokenType::Number { str, prefix } => {
@@ -384,26 +436,24 @@ impl<'a> Parser<'a> {
 					}
 				}
 			}
-			TokenType::Identifier { str } => Some(Expression::Variable(Variable { name: str })),
+			TokenType::Identifier { str } => {
+				let call = self.parse_call(str.clone());
+				if call.is_some() {
+					call
+				} else {
+					Some(Expression::Variable(Variable { name: str }))
+				}
+			}
 			TokenType::LeftParen => {
 				let expr = self.parse_expression();
-				match self.expect_token() {
-					Some(Token {
-						token_type: TokenType::RightParen,
-						..
-					}) => expr,
-					Some(t) => {
-						self.unexpected_token(&t);
-						None
-					}
-					None => None,
+				if self.expect_token(TokenType::RightParen) {
+					expr
+				} else {
+					None
 				}
 			}
 			_ => {
-				println!(
-					"Unexpected token '{:?}' (line {}, col {})",
-					t.token_type, t.line, t.column
-				);
+				self.put_token(t);
 				None
 			}
 		} // match
@@ -447,6 +497,21 @@ mod tests {
 
 	fn bin_op_ast(left: Expression, op: BinaryOp, right: Expression) -> Ast {
 		Ast::Expression(bin_op_expr(left, op, right))
+	}
+
+	fn call_expr(name: &str, exprs: Vec<Expression>) -> Expression {
+		Expression::Call(Call {
+			name: name.to_string(),
+			params: exprs,
+		})
+	}
+
+	fn call_ast(name: &str, exprs: Vec<Expression>) -> Ast {
+		Ast::Expression(call_expr(name, exprs))
+	}
+
+	fn comp_assign_expr(name: &str, op: BinaryOp, right: Expression) -> Expression {
+		assign_expr(name, bin_op_expr(var_expr(name), op, right))
 	}
 
 	fn comp_assign_ast(name: &str, op: BinaryOp, right: Expression) -> Ast {
@@ -559,6 +624,58 @@ mod tests {
 	#[test]
 	fn parse_bit_xor_assign() {
 		parse_comp_assign("^=", BinaryOp::BitXor);
+	}
+
+	#[test]
+	fn parse_call_assignment() {
+		expect("a = abc()", assign_ast("a", call_expr("abc", vec![])));
+	}
+
+	#[test]
+	fn parse_call_complex_params() {
+		expect(
+			"abc(a++, 7/2)",
+			call_ast(
+				"abc",
+				vec![
+					comp_assign_expr("a", BinaryOp::Plus, num_expr(1f64)),
+					bin_op_expr(num_expr(7f64), BinaryOp::Divide, num_expr(2f64)),
+				],
+			),
+		);
+	}
+
+	#[test]
+	fn parse_call_expr() {
+		expect(
+			"abc(1) / 2",
+			bin_op_ast(
+				call_expr("abc", vec![num_expr(1f64)]),
+				BinaryOp::Divide,
+				num_expr(2f64),
+			),
+		);
+	}
+
+	#[test]
+	fn parse_call_nested() {
+		expect(
+			"foo(bar(3), 2)",
+			call_ast(
+				"foo",
+				vec![call_expr("bar", vec![num_expr(3f64)]), num_expr(2f64)],
+			),
+		);
+	}
+
+	#[test]
+	fn parse_call_no_params() {
+		expect("abc()", call_ast("abc", vec![]));
+	}
+
+	#[test]
+	fn parse_call_trailing_comma() {
+		expect("abc(1,)", call_ast("abc", vec![num_expr(1f64)]));
 	}
 
 	#[test]

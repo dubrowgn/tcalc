@@ -2,6 +2,24 @@ use crate::ast::*;
 use std::collections::HashMap;
 use std::f64::consts::*;
 
+fn too_x_params(call: &Call, count: u8, x: &str) -> Result<f64, String> {
+	Err(format!(
+		"Call to {}() has to {} parameters; expected {} but found {}.",
+		call.name,
+		x,
+		count,
+		call.params.len()
+	))
+}
+
+fn too_few_params(call: &Call, count: u8) -> Result<f64, String> {
+	too_x_params(call, count, "few")
+}
+
+fn too_many_params(call: &Call, count: u8) -> Result<f64, String> {
+	too_x_params(call, count, "many")
+}
+
 pub struct Runner {
 	scopes: Vec<HashMap<String, f64>>,
 }
@@ -43,10 +61,11 @@ impl Runner {
 		None
 	}
 
-	pub fn run_expression(&mut self, expr: Expression) -> Result<f64, String> {
+	pub fn run_expression(&mut self, expr: &Expression) -> Result<f64, String> {
 		let ans = match expr {
 			Expression::Assignment(a) => self.run_assignment(a),
 			Expression::Binary(b) => self.run_binary(b),
+			Expression::Call(c) => self.run_call(c),
 			Expression::Literal(l) => self.run_literal(l),
 			Expression::Unary(u) => self.run_unary(u),
 			Expression::Variable(v) => self.run_variable(v),
@@ -57,27 +76,27 @@ impl Runner {
 		Ok(ans)
 	}
 
-	pub fn run_statement(&mut self, stmt: Statement) -> Result<(), String> {
+	pub fn run_statement(&mut self, stmt: &Statement) -> Result<(), String> {
 		match stmt {
 			Statement::DeleteVar(var) => self.run_delete_var(var),
 		}
 	}
 
-	fn run_literal(&self, lit: Literal) -> Result<f64, String> {
+	fn run_literal(&self, lit: &Literal) -> Result<f64, String> {
 		match lit {
-			Literal::Number(n) => Ok(n),
+			Literal::Number(n) => Ok(*n),
 		}
 	} // run_literal
 
-	fn run_variable(&self, var: Variable) -> Result<f64, String> {
+	fn run_variable(&self, var: &Variable) -> Result<f64, String> {
 		match self.scope_get(&var.name) {
 			Some(val) => Ok(*val),
 			None => Err(format!("Variable \"{}\" is undefined", var.name)),
 		}
 	} // run_variable
 
-	fn run_unary(&mut self, un: Unary) -> Result<f64, String> {
-		let r = self.run_expression(*un.right)?;
+	fn run_unary(&mut self, un: &Unary) -> Result<f64, String> {
+		let r = self.run_expression(&*un.right)?;
 
 		match un.op {
 			UnaryOp::Negate => Ok(-r),
@@ -85,9 +104,9 @@ impl Runner {
 		}
 	} // run_unary
 
-	fn run_binary(&mut self, bin: Binary) -> Result<f64, String> {
-		let l = self.run_expression(*bin.left)?;
-		let r = self.run_expression(*bin.right)?;
+	fn run_binary(&mut self, bin: &Binary) -> Result<f64, String> {
+		let l = self.run_expression(&*bin.left)?;
+		let r = self.run_expression(&*bin.right)?;
 
 		match bin.op {
 			BinaryOp::BitAnd => Ok(((l as i64) & (r as i64)) as f64),
@@ -116,13 +135,52 @@ impl Runner {
 		}
 	} // run_binary
 
-	fn run_assignment(&mut self, assign: Assignment) -> Result<f64, String> {
-		let r = self.run_expression(*assign.right)?;
-		self.scope_set(assign.var.name, r);
+	fn run_assignment(&mut self, assign: &Assignment) -> Result<f64, String> {
+		let r = self.run_expression(&*assign.right)?;
+		self.scope_set(assign.var.name.clone(), r);
 		Ok(r)
-	} // run_assignment
+	}
 
-	fn run_delete_var(&mut self, var: Variable) -> Result<(), String> {
+	fn run_call(&mut self, call: &Call) -> Result<f64, String> {
+		match call.name.as_str() {
+			"abs" => match call.params.len() {
+				0 => too_few_params(call, 1),
+				1 => {
+					let val = self.run_expression(&call.params[0])?;
+					Ok(val.abs())
+				}
+				_ => too_many_params(call, 1),
+			},
+			"ceil" => match call.params.len() {
+				0 => too_few_params(call, 1),
+				1 => {
+					let val = self.run_expression(&call.params[0])?;
+					Ok(val.ceil())
+				}
+				_ => too_many_params(call, 1),
+			},
+			"floor" => match call.params.len() {
+				0 => too_few_params(call, 1),
+				1 => {
+					let val = self.run_expression(&call.params[0])?;
+					Ok(val.floor())
+				}
+				_ => too_many_params(call, 1),
+			},
+			"round" => match call.params.len() {
+				0 => too_few_params(call, 1),
+				1 => {
+					let val = self.run_expression(&call.params[0])?;
+					Ok(val.round())
+				}
+				_ => too_many_params(call, 1),
+			},
+			// rand
+			_ => Err(format!("Function \"{}\" is undefined", call.name)),
+		}
+	}
+
+	fn run_delete_var(&mut self, var: &Variable) -> Result<(), String> {
 		if self.scope_unset(&var.name) == None {
 			Err(format!("Variable \"{}\" is undefined", var.name))
 		} else {
@@ -149,7 +207,7 @@ mod tests {
 			),
 		};
 
-		match Runner::new().run_expression(expr) {
+		match Runner::new().run_expression(&expr) {
 			Ok(v) => v,
 			Err(msg) => panic!("Error for input \"{}\": {}", input, msg),
 		}
@@ -205,5 +263,15 @@ mod tests {
 		assert_eq!(solve("6/(3-2)"), 6f64);
 		assert_eq!(solve("6*3**2"), 54f64);
 		assert_eq!(solve("(6*3)**2"), 324f64);
+	}
+
+	#[test]
+	fn solve_call() {
+		assert_eq!(solve("abs(-7)"), 7f64);
+		assert_eq!(solve("ceil(3.4)"), 4f64);
+		assert_eq!(solve("floor(3.5)"), 3f64);
+		assert_eq!(solve("round(3.5)"), 4f64);
+
+		assert_eq!(solve("a = abs(ceil(floor(-1.234 * 10) / 10))"), 1f64);
 	}
 } // mod tests

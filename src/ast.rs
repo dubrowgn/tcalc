@@ -14,6 +14,7 @@ pub enum Command {
 pub enum Expression {
 	Assignment(Assignment),
 	Binary(Binary),
+	Call(Call),
 	Literal(Literal),
 	Unary(Unary),
 	Variable(Variable),
@@ -50,6 +51,12 @@ pub enum BinaryOp {
 	Multiply,
 	Plus,
 	RightShift,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Call {
+	pub name: String,
+	pub params: Vec<Expression>,
 }
 
 #[derive(Debug, PartialEq)]
