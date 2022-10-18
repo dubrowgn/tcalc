@@ -16,6 +16,9 @@ include = [
 	"src/*.rs",
 ]
 
+[profile.release]
+lto = "fat"
+
 [dependencies]
 dirs = "2.0.2"
 tcalc-rustyline = "1.0.2"
