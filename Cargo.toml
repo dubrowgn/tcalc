@@ -20,7 +20,7 @@ include = [
 lto = "fat"
 
 [dependencies]
-dirs = "2.0.2"
+dirs = "4.0.x"
 tcalc-rustyline = "1.0.2"
 #tcalc-rustyline = { path = "../rustyline" }
 
