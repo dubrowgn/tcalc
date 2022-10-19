@@ -2,7 +2,7 @@
 authors = ["dubrowgn"]
 description = "A featureful calculator for when you want to do math in a terminal."
 documentation = "https://github.com/dubrowgn/tcalc"
-edition = "2018"
+edition = "2021"
 license = "MIT"
 name = "tcalc"
 readme="README.md"
