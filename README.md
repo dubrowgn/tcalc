@@ -9,9 +9,10 @@ tcalc supports two modes of usage: terminal and REPL.
 
 ```bash
 # Terminal
-$ tcalc "2**8 - 1" "ans >> 1"
+$ tcalc '2**8 - 1' 'ans >> 1' 'abs(-13.7)'
 255
 127
+13.7
 ```
 
 ```bash
@@ -21,6 +22,8 @@ $ tcalc
   255
 > ans >> 1
   127
+> abs(-13.7)
+  13.7
 > exit
 ```
 
@@ -45,6 +48,7 @@ $ tcalc
 | \|                                   | bitwise OR                       |
 | =                                    | variable assignment              |
 | += -= *= /= %= **= &= \|= ^= <<= >>= | compound assignment              |
+| func_name([arg, ...])                  | function call                    |
 
 | Numeric Format | Description                |
 |----------------|----------------------------|
@@ -62,6 +66,14 @@ $ tcalc
 | phi      | Golden ratio (φ)              |
 | pi       | Archimedes' constant (π)      |
 | ans      | Result of previous expression |
+
+
+| Function | Description                                                            |
+|----------|------------------------------------------------------------------------|
+| abs(n)   | Returns the absolute value of `n`                                      |
+| ceil(n)  | Returns the smallest integer greater than or equal to `n`              |
+| floor(n) | Returns the largest integer less than or equal to `n`                  |
+| round(n) | Returns the nearest integer to `n`; Round half-way cases away from 0.0 |
 
 ## REPL
 
