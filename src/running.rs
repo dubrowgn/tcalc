@@ -62,18 +62,22 @@ impl Runner {
 	}
 
 	pub fn run_expression(&mut self, expr: &Expression) -> Result<f64, String> {
-		let ans = match expr {
+		let ans = self._run_expression(expr)?;
+
+		self.scope_set("ans".to_string(), ans);
+
+		Ok(ans)
+	}
+
+	fn _run_expression(&mut self, expr: &Expression) -> Result<f64, String> {
+		match expr {
 			Expression::Assignment(a) => self.run_assignment(a),
 			Expression::Binary(b) => self.run_binary(b),
 			Expression::Call(c) => self.run_call(c),
 			Expression::Literal(l) => self.run_literal(l),
 			Expression::Unary(u) => self.run_unary(u),
 			Expression::Variable(v) => self.run_variable(v),
-		}?;
-
-		self.scope_set("ans".to_string(), ans);
-
-		Ok(ans)
+		}
 	}
 
 	pub fn run_statement(&mut self, stmt: &Statement) -> Result<(), String> {
@@ -96,7 +100,7 @@ impl Runner {
 	} // run_variable
 
 	fn run_unary(&mut self, un: &Unary) -> Result<f64, String> {
-		let r = self.run_expression(&*un.right)?;
+		let r = self._run_expression(&*un.right)?;
 
 		match un.op {
 			UnaryOp::Negate => Ok(-r),
@@ -105,8 +109,8 @@ impl Runner {
 	} // run_unary
 
 	fn run_binary(&mut self, bin: &Binary) -> Result<f64, String> {
-		let l = self.run_expression(&*bin.left)?;
-		let r = self.run_expression(&*bin.right)?;
+		let l = self._run_expression(&*bin.left)?;
+		let r = self._run_expression(&*bin.right)?;
 
 		match bin.op {
 			BinaryOp::BitAnd => Ok(((l as i64) & (r as i64)) as f64),
@@ -136,7 +140,7 @@ impl Runner {
 	} // run_binary
 
 	fn run_assignment(&mut self, assign: &Assignment) -> Result<f64, String> {
-		let r = self.run_expression(&*assign.right)?;
+		let r = self._run_expression(&*assign.right)?;
 		self.scope_set(assign.var.name.clone(), r);
 		Ok(r)
 	}
@@ -146,7 +150,7 @@ impl Runner {
 			"abs" => match call.params.len() {
 				0 => too_few_params(call, 1),
 				1 => {
-					let val = self.run_expression(&call.params[0])?;
+					let val = self._run_expression(&call.params[0])?;
 					Ok(val.abs())
 				}
 				_ => too_many_params(call, 1),
@@ -154,7 +158,7 @@ impl Runner {
 			"ceil" => match call.params.len() {
 				0 => too_few_params(call, 1),
 				1 => {
-					let val = self.run_expression(&call.params[0])?;
+					let val = self._run_expression(&call.params[0])?;
 					Ok(val.ceil())
 				}
 				_ => too_many_params(call, 1),
@@ -162,7 +166,7 @@ impl Runner {
 			"floor" => match call.params.len() {
 				0 => too_few_params(call, 1),
 				1 => {
-					let val = self.run_expression(&call.params[0])?;
+					let val = self._run_expression(&call.params[0])?;
 					Ok(val.floor())
 				}
 				_ => too_many_params(call, 1),
@@ -170,7 +174,7 @@ impl Runner {
 			"round" => match call.params.len() {
 				0 => too_few_params(call, 1),
 				1 => {
-					let val = self.run_expression(&call.params[0])?;
+					let val = self._run_expression(&call.params[0])?;
 					Ok(val.round())
 				}
 				_ => too_many_params(call, 1),
